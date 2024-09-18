@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat with Adonis</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link rel="stylesheet" href="chat.css" />
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="messages">
+        <!-- Messages will be added dynamically here -->
+      </div>
+      <div class="send-section">
+        <div class="input-wrapper">
+          <textarea
+            class="auto-expanding-textarea"
+            rows="1"
+            placeholder="Message Adonis"
+          ></textarea>
+          <button class="send-button">
+            <i class="fa-solid fa-arrow-up"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    <button class="three-dots-button">
+      <i class="fa-solid fa-ellipsis"></i>
+    </button>
+    <button class="settings-button">
+      <i class="fa-solid fa-gear"></i>
+    </button>
+    <button class="mode-toggle-button"><i class="fas fa-sun"></i></button>
+    <button class="feedback-button">
+      <i class="fa-solid fa-feather"></i>
+    </button>
+    <div class="feedback-container">
+      <textarea
+        class="feedback-textarea"
+        placeholder="Improve Adonis AI by leaving feedback"
+      ></textarea>
+      <button class="submit-feedback-button" disabled>Submit</button>
+    </div>
+    <script src="chat.js"></script>
+  </body>
+</html>

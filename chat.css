@@ -1,0 +1,451 @@
+/* Import Sora font from Google Fonts (example) */
+@import url("https://fonts.googleapis.com/css2?family=Sora:wght@400;700&display=swap");
+
+/* Apply Sora font to all elements */
+body,
+button,
+input,
+textarea,
+select,
+.message {
+  font-family: "Sora", sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  width: 70%;
+  height: 100%;
+  background-color: var(--container-background);
+  overflow: hidden;
+}
+.three-dots-button {
+  display: none;
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0);
+  color: var(--icon-color);
+  border: none;
+  cursor: pointer;
+  font-size: 22px;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.3s ease-in-out;
+}
+.send-section {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  box-sizing: border-box;
+  background: var(--send-section-background);
+}
+
+.input-wrapper {
+  position: relative;
+  flex-grow: 1;
+  margin-right: 10px;
+}
+
+.auto-expanding-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 20px;
+  line-height: 1.5;
+  border: none;
+  background-color: var(--textarea-background);
+  color: var(--text-color);
+  border-radius: 25px;
+  resize: none;
+  overflow-y: auto;
+  padding: 10px;
+  padding-left: 15px;
+  padding-right: 40px;
+  /* Add space for the button inside the textarea */
+}
+
+.auto-expanding-textarea:focus {
+  outline: none;
+  border-color: transparent;
+}
+
+.auto-expanding-textarea::placeholder {
+  color: var(--placeholder-color);
+}
+
+.send-button {
+  position: absolute;
+  right: 5px;
+  top: 45%;
+  transform: translateY(-50%);
+  width: 35px;
+  height: 35px;
+  border-radius: 100%;
+  background-color: var(--send-color);
+  /* Set background color */
+  color: var(--send-icon-color);
+  border: none;
+  cursor: pointer;
+  font-size: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.3s ease;
+  /* Smooth transition for background color */
+  overflow: hidden;
+}
+
+.send-button:hover {
+  background-color: var(--send-color-hover);
+  /* Hover background color */
+}
+
+.send-button:disabled {
+  cursor: not-allowed;
+  /* Change cursor to indicate not allowed */
+  background-color: var(--send-color-disabled);
+  /* Disabled state background color */
+}
+
+.messages {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.message {
+  padding: 10px;
+  margin: 10px 0px;
+  border-radius: 15px;
+  font-size: 20px;
+  max-width: 100%;
+  /* Adjust the maximum width as needed */
+  word-wrap: break-word;
+  font-family: "Sora", sans-serif;
+  display: inline-block;
+}
+@keyframes reveal {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.message.user {
+  background-color: var(--your-message-background);
+  align-self: flex-end;
+}
+
+.message.assistant {
+  background-color: var(--adonis-message-background);
+  align-self: flex-start;
+}
+.chunk {
+  display: inline-block;
+  /* Ensure chunks are visible and inline */
+}
+
+.reveal {
+  animation: reveal 1s forwards;
+  /* Adjust timing if needed */
+}
+
+.consolidated-text {
+  /* Optional: style for consolidated text */
+}
+.mode-toggle-button {
+  position: absolute;
+  right: 20px;
+  top: 60px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0);
+  border: none;
+  cursor: pointer;
+  font-size: 22px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.3s ease-in-out;
+}
+
+.mode-toggle-button i {
+  color: var(--icon-color);
+}
+
+.mode-toggle-button:hover {
+  transform: scale(1.2);
+}
+
+.settings-button {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0);
+  border: none;
+  cursor: pointer;
+  font-size: 22px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.3s ease-in-out;
+}
+.settings-button i {
+  color: var(--icon-color);
+}
+.settings-button:hover {
+  transform: scale(1.2);
+  animation: rotate 2s linear infinite;
+}
+.feedback-button {
+  position: absolute;
+  right: 20px;
+  top: 100px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0);
+  border: none;
+  cursor: pointer;
+  font-size: 22px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.35s ease-in-out;
+}
+.feedback-button i {
+  color: var(--icon-color);
+}
+.feedback-button:hover {
+  transform: rotate(-22deg);
+}
+.feedback-container {
+  display: none;
+  position: absolute;
+  background-color: var(--textarea-background);
+  color: var(--text-color);
+  width: 300px;
+  padding: 30px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 22px;
+  border-radius: 10px;
+  border-width: 0px;
+  outline: none;
+  overflow-y: auto;
+  margin: 0;
+}
+
+.feedback-textarea {
+  position: relative;
+  background-color: rgba(0, 0, 0, 0);
+  color: var(--text-color);
+  width: 100%;
+  height: calc(
+    100% - 50px - 10px
+  ); /* Adjusted height to fit within container */
+  font-size: 22px;
+  outline: none;
+  resize: none;
+  border-width: 0px;
+  overflow-y: auto;
+}
+
+.feedback-textarea::placeholder {
+  color: var(--placeholder-color);
+}
+
+.submit-feedback-button {
+  border-width: 0px;
+  border-radius: 10px;
+  font-size: 20px;
+  cursor: pointer;
+  background-color: var(--send-section-background);
+  color: var(--text-color);
+  width: 100%;
+  height: 50px; /* Fixed height to match available space */
+  margin-top: 10px; /* Added margin to separate from textarea */
+}
+.submit-feedback-button:disabled {
+  color: var(--placeholder-color);
+  cursor: not-allowed;
+}
+@media only screen and (max-width: 750px) {
+  .container {
+    width: 100%;
+  }
+  .three-dots-button {
+    display: flex;
+  }
+  .settings-button {
+    display: none;
+    top: 60px;
+  }
+  .mode-toggle-button {
+    display: none;
+    top: 100px;
+  }
+  .feedback-button {
+    display: none;
+    top: 140px;
+  }
+}
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+.loader {
+  width: 10px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--background-color);
+  box-shadow: 0 0 0 0 rgba(var(--background-color-rgb), 1);
+  animation: l2 1.5s infinite linear;
+  position: relative;
+}
+.loader:before,
+.loader:after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 0 0 rgba(var(--background-color-rgb), 0.5);
+  animation: inherit;
+  animation-delay: -0.5s;
+}
+.loader:after {
+  animation-delay: -1s;
+}
+@keyframes l2 {
+  100% {
+    box-shadow: 0 0 0 40px #0000;
+  }
+}
+
+:root {
+  --background-color: rgb(255, 255, 255);
+  --background-color-rgb: 255, 255, 255;
+  /* #fff */
+  --text-color: rgb(59, 59, 59);
+  /* #3b3b3b */
+  --container-background: rgb(255, 255, 255);
+  /* #fff */
+  --send-section-background: rgb(255, 255, 255);
+  /* #fff */
+  --textarea-background: rgb(244, 244, 244);
+  /* #f4f4f4 */
+  --border-color: rgb(221, 221, 221);
+  /* #ddd */
+  --your-message-background: rgb(244, 244, 244);
+  /* #f4f4f4 */
+  --adonis-message-background: rgb(255, 255, 255);
+  /* #fff */
+  --icon-color: rgb(176, 176, 176);
+  /* #b0b0b0 */
+  --send-color: rgb(59, 59, 59);
+  /* #3b3b3b */
+  --send-color-hover: rgb(107, 107, 107);
+  /* #6b6b6b */
+  --send-color-disabled: rgb(214, 214, 214);
+  /* #d6d6d6 */
+  --placeholder-color: rgb(176, 176, 176);
+  /* #b0b0b0 */
+  --send-icon-color: rgb(255, 255, 255);
+}
+
+/* Dark mode variables */
+body.dark-mode {
+  --background-color: rgb(24, 24, 24);
+  --background-color-rgb: 24, 24, 24;
+  /* #181818 */
+  --text-color: rgb(224, 224, 224);
+  /* #e0e0e0 */
+  --container-background: rgb(24, 24, 24);
+  /* #181818 */
+  --send-section-background: rgb(24, 24, 24);
+  /* #181818 */
+  --textarea-background: rgb(43, 43, 43);
+  /* #2b2b2b */
+  --border-color: rgb(68, 68, 68);
+  /* #444 */
+  --your-message-background: rgb(43, 43, 43);
+  /* #2b2b2b */
+  --adonis-message-background: rgb(24, 24, 24);
+  /* #181818 */
+  --icon-color: rgb(224, 224, 224);
+  /* #e0e0e0 */
+  --send-color: rgb(224, 224, 224);
+  /* #e0e0e0 */
+  --send-color-hover: rgb(242, 242, 242);
+  /* #f2f2f2 */
+  --send-color-disabled: rgb(73, 73, 73);
+  /* #212121 */
+  --placeholder-color: rgb(80, 80, 80);
+  /* #b0b0b0 */
+  --send-icon-color: rgb(24, 24, 24);
+}
+
+/* Dark red mode variables */
+body.dark-red-mode {
+  --background-color: rgb(24, 0, 0);
+  --background-color-rgb: 24, 0, 0;
+  /* #181818 */
+  --text-color: rgb(224, 0, 0);
+  /* #e0e0e0 */
+  --container-background: rgb(24, 0, 0);
+  /* #181818 */
+  --send-section-background: rgb(24, 0, 0);
+  /* #181818 */
+  --textarea-background: rgb(43, 0, 0);
+  /* #2b2b2b */
+  --border-color: rgb(68, 0, 0);
+  /* #444 */
+  --your-message-background: rgb(43, 0, 0);
+  /* #2b2b2b */
+  --adonis-message-background: rgb(24, 0, 0);
+  /* #181818 */
+  --icon-color: rgb(224, 0, 0);
+  /* #e0e0e0 */
+  --send-color: rgb(224, 0, 0);
+  /* #e0e0e0 */
+  --send-color-hover: rgb(242, 0, 0);
+  /* #f2f2f2 */
+  --send-color-disabled: rgb(73, 0, 0);
+  /* #212121 */
+  --placeholder-color: rgb(80, 0, 0);
+  /* #b0b0b0 */
+  --send-icon-color: rgb(24, 0, 0);
+}
