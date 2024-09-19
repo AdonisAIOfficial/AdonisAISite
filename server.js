@@ -1,47 +1,50 @@
+const WebSocket = require("ws");
+const express = require("express");
 const http = require("http");
-const fs = require("fs");
 const path = require("path");
 
-const server = http.createServer((req, res) => {
-  let filePath = "." + req.url;
-  if (filePath === "./") filePath = "./chat.html";
-  else if (filePath === "./landing") filePath = "./landing.html";
-  const extname = String(path.extname(filePath)).toLowerCase();
-  const mimeTypes = {
-    ".html": "text/html",
-    ".js": "text/javascript",
-    ".css": "text/css",
-    ".json": "application/json",
-    ".png": "image/png",
-    ".jpg": "image/jpg",
-    ".gif": "image/gif",
-    ".wav": "audio/wav",
-    ".mp4": "video/mp4",
-    ".woff": "application/font-woff",
-    ".ttf": "application/font-ttf",
-    ".eot": "application/vnd.ms-fontobject",
-    ".otf": "application/font-otf",
-    ".svg": "application/image/svg+xml",
-  };
+const app = express();
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
 
-  const contentType = mimeTypes[extname] || "application/octet-stream";
+const PORT = process.env.PORT || 3000;
+app.use(express.static(path.join(__dirname, "./public")));
+let userCount = 0;
+// WebSocket connection handler
+wss.on("connection", (ws) => {
+  console.clear();
+  userCount++;
+  console.log(`Active users: ${userCount}`);
 
-  fs.readFile(filePath, (error, content) => {
-    if (error) {
-      if (error.code == "ENOENT") {
-        res.writeHead(404, { "Content-Type": "text/html" });
-        res.end("404 Not Found", "utf-8");
-      } else {
-        res.writeHead(500);
-        res.end("Server Error: " + error.code);
+  // Handle messages from clients
+  ws.on("message", (message) => {
+    console.log("Received:", JSON.parse(message));
+    ws.send(message);
+    // Broadcast the message to all clients
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(message);
       }
-    } else {
-      res.writeHead(200, { "Content-Type": contentType });
-      res.end(content, "utf-8");
-    }
+    });
+  });
+
+  // Handle client disconnection
+  ws.on("close", () => {
+    console.clear();
+    userCount--;
+    console.log(`Active users: ${userCount}`);
   });
 });
 
-server.listen(3000, "localhost", () => {
-  console.log("Server running at http://localhost:3000/");
+// Serve HTML files
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public/chat", "chat.html"));
+});
+
+app.get("/landing", (req, res) => {
+  res.sendFile(path.join(__dirname, "public/landing", "landing.html"));
+});
+
+server.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });

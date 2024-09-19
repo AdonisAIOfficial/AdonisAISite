@@ -1,3 +1,5 @@
+// Init
+const ws = new WebSocket("ws://localhost:3000");
 const textarea = document.querySelector(".auto-expanding-textarea");
 const sendButton = document.querySelector(".send-button");
 const messages = document.querySelector(".messages");
@@ -13,7 +15,11 @@ const threedotsButton = document.querySelector(".three-dots-button");
 let mobileMenuOpen = false;
 let feedbackBoxOpen = false;
 let pendingChunks = 0;
-
+//
+ws.onmessage = async (event) => {
+  const message = await event.data.text();
+  console.log("Message from server: ", message);
+};
 threedotsButton.addEventListener("click", function () {
   if (mobileMenuOpen) {
     settingsButton.style.display = "none";
@@ -125,7 +131,7 @@ function sendMessage() {
     sendForcedDisabled = true;
     updateSendButtonState();
     adjustLayout();
-    window.parent.postMessage({ operation: "chat", message: messageText }, "*");
+    ws.send(JSON.stringify({ operation: "chat", message: messageText }));
   }
 }
 function formatText(text) {
