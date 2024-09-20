@@ -17,8 +17,47 @@ let feedbackBoxOpen = false;
 let pendingChunks = 0;
 //
 ws.onmessage = async (event) => {
-  const message = await event.data.text();
+  // const message = await event.data.text();
+  const message = event.data;
   console.log("Message from server: ", message);
+  const json = JSON.parse(message);
+  if (json.op == "end") {
+    // Ensure all chunks are processed before setting lastMessageDiv to null
+    const checkChunksDone = setInterval(() => {
+      if (pendingChunks === 0) {
+        lastMessageDiv = null;
+        sendForcedDisabled = false;
+        updateSendButtonState();
+        adjustLayout();
+        clearInterval(checkChunksDone);
+      }
+    }, 100);
+  } else if (json.op == "ch") {
+    addChunk(json.ch);
+    adjustLayout();
+  }
+  /**
+    if (event.data.operation === "load") {
+    addMessage(event.data.sender, event.data.message);
+    adjustLayout();
+  } else if (event.data.operation === "stream") {
+    addChunk(event.data.chunk);
+    adjustLayout();
+  } else if (event.data.operation === "end") {
+    // Ensure all chunks are processed before setting lastMessageDiv to null
+    const checkChunksDone = setInterval(() => {
+      if (pendingChunks === 0) {
+        lastMessageDiv = null;
+        sendForcedDisabled = false;
+        updateSendButtonState();
+        adjustLayout();
+        clearInterval(checkChunksDone);
+      }
+    }, 100);
+  } else if (event.data.operation === "clearChat") {
+    clearChat();
+  }
+   */
 };
 threedotsButton.addEventListener("click", function () {
   if (mobileMenuOpen) {
@@ -131,7 +170,7 @@ function sendMessage() {
     sendForcedDisabled = true;
     updateSendButtonState();
     adjustLayout();
-    ws.send(JSON.stringify({ operation: "chat", message: messageText }));
+    ws.send(JSON.stringify({ op: "msg", msg: messageText }));
   }
 }
 function formatText(text) {
@@ -167,30 +206,6 @@ function adjustLayout() {
 }
 
 let lastMessageDiv = null;
-
-window.onmessage = (event) => {
-  if (event.data.operation === "load") {
-    addMessage(event.data.sender, event.data.message);
-    adjustLayout();
-  } else if (event.data.operation === "stream") {
-    addChunk(event.data.chunk);
-    adjustLayout();
-  } else if (event.data.operation === "end") {
-    // Ensure all chunks are processed before setting lastMessageDiv to null
-    const checkChunksDone = setInterval(() => {
-      if (pendingChunks === 0) {
-        lastMessageDiv = null;
-        sendForcedDisabled = false;
-        updateSendButtonState();
-        adjustLayout();
-        clearInterval(checkChunksDone);
-      }
-    }, 100);
-  } else if (event.data.operation === "clearChat") {
-    clearChat();
-  }
-};
-
 function addChunk(chunk) {
   if (!lastMessageDiv) {
     lastMessageDiv = document.createElement("div");
