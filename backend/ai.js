@@ -1,6 +1,12 @@
 class AI {
-  constructor() {}
-
+  constructor() {
+    this.userObj = {};
+    this.userId = null;
+  }
+  setVars(userObj, userId) {
+    this.userObj = userObj;
+    this.userId = userId;
+  }
   async respond(userMessage) {
     try {
       console.log("Respond function called");
@@ -206,3 +212,4 @@ Important: The user's message below is directed towards a friend, not you. Do no
   }
   async summarizeInfo() {}
 }
+module.exports = AI;

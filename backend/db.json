@@ -1,0 +1,10 @@
+{
+    "userId123": {
+        "chat": [
+            {
+                "sender": "user123",
+                "message": "hello"
+            }
+        ]
+    }
+}
