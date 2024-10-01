@@ -8,6 +8,7 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 const accountManager = require("./backend/accountManager.js");
+const emailVerifier = require("./backend/emailVerifier.js");
 let userCount = 0;
 const PORT = process.env.PORT || 3000;
 app.use(express.static(path.join(__dirname, "./public")));
@@ -16,18 +17,46 @@ let userMap = new Map();
 let blackList = new Set(); // sends the user to pay 
 let grayList = new Set(); // sends the user to login
 let whitelist = new Set(); // allows user to freely chat
-wss.on("connection", (ws) => {
+wss.on("connection", async (ws) => {
   userCount++;
   ws.userSessionId = uuidv4();
   greyList.add(ws.userSessionId);
-  ws.on("message", (message) => {
+  ws.on("message", async (message) => {
     const json = JSON.parse(message);
     switch (json.op) {
-      case "login": 
-        
-      break;
-      case "signup": 
+      case "auth":
 
+      break;
+      case "enter":
+        let pollId = uuidv4();
+        const result = await accountManager.enter(json.email, json.password, pollId);
+        switch(result.op)
+        {
+          case "allowLogin":
+            ws.send(`{"op":"allowLogin","msg":"${result.msg}"}`);
+          break;
+          case "denyLogin":
+            ws.send(`{"op":"denyLogin","msg":"${result.msg}"}`);
+          break;
+          case "error":
+            ws.send(`{"op":"error","msg":"${result.msg}"}`);
+          break;
+        }
+        while(true)
+          {
+            let commandFromPoll = await accountManager.getPoll(pollId);
+            if(commandFromPoll=="sendVerificationEmail")
+              {
+                const verifyCode = await emailVerifier.sendVerificationEmail(json.email);
+                ws.send(`{"op":"verificationCodeNeeded"}`);
+                break;
+              }
+          }
+      break;
+      case "msg":
+      break;
+      default:
+        console.log("Unknown op: " + json.op);
       break;
     }
     // if(json.op=="auth")
