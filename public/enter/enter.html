@@ -1,64 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login/Signup</title>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
-      integrity="sha512-pQm5+V51au9eXmEkcAqOzGvJ9oA0rFs77GMwPunZJlyd4k5Og5o47wV+ft7G3f4B/FA5JeCB+H0N1dL1qGR2NA=="
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
-    />
-    <link rel="stylesheet" href="/enter/enter.css" />
-  </head>
-  <body>
-    <canvas id="networkCanvas"></canvas>
-    <div class="container">
-      <h2 id="title">Login / Signup</h2>
-      <form class="form" id="loginForm">
-        <input type="email" id="emailInput" placeholder="Email" required />
-        <div style="position: relative">
-          <input
-            type="password"
-            id="passwordInput"
-            placeholder="Password"
-            required
-          />
-          <span id="passwordError">Incorrect password.</span>
-          <span id="emailError">Temporary emails are forbidden.</span>
-          <span class="password-toggle" id="togglePassword">
-            <i class="fas fa-eye"></i>
-          </span>
-        </div>
-        <button type="submit">Enter</button>
-      </form>
 
-      <div class="verify-container" id="verifyContainer">
-        <div id="verifyMessage">
-          Check your email for the verification code.
-        </div>
-        <a href="#" id="verificationLink" target="_blank"
-          >Click here to open Gmail</a
-        >
-        <input
-          type="text"
-          id="verificationCodeInput"
-          class="verify-input"
-          placeholder="Enter verification code"
-          maxlength="6"
-        />
-        <span id="codeError">Incorrect code.</span>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login/Signup</title>
+  <link rel="stylesheet" href="./enter.css" />
+</head>
+
+<body>
+  <canvas id="networkCanvas"></canvas>
+  <div class="container">
+    <h2 id="title">Login / Signup</h2>
+    <form class="form" id="loginForm">
+      <input type="email" id="emailInput" placeholder="Email" required />
+      <div style="position: relative">
+        <input type="password" id="passwordInput" placeholder="Password" required />
+        <span id="passwordError">Incorrect password.</span>
+        <span id="emailError">Temporary emails are forbidden.</span>
       </div>
-    </div>
+      <button type="submit">Enter</button>
+    </form>
 
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"
-      integrity="sha512-sVyp9vj2A8g5oTgP6PcUQ3IQMmNyTHkALj1MOYVVAd8z5G3/zA/BNGIOz73wLkPUPIKvKK8v2FX5Dd7j4te5Yg=="
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
-    ></script>
-    <script src="enter/enter.js"></script>
-  </body>
+    <div class="verify-container" id="verifyContainer">
+      <div id="verifyMessage">
+        Check your email for the verification code.
+      </div>
+      <a href="#" id="verificationLink" target="_blank">Click here to open Gmail</a>
+      <input type="text" id="verificationCodeInput" class="verify-input" placeholder="Enter verification code"
+        maxlength="6" />
+      <span id="codeError">Incorrect code.</span>
+    </div>
+  </div>
+
+  <script src="./enter.js"></script>
+</body>
+
 </html>

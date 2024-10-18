@@ -1,5 +1,4 @@
 const passwordInput = document.getElementById("passwordInput");
-const togglePassword = document.getElementById("togglePassword");
 const passwordError = document.getElementById("passwordError");
 const emailError = document.getElementById("emailError");
 const verifyContainer = document.getElementById("verifyContainer");
@@ -9,24 +8,16 @@ const title = document.getElementById("title");
 const codeError = document.getElementById("codeError");
 const enterButton = document.querySelector('button[type="submit"]');
 
-togglePassword.addEventListener("click", function () {
-  const type =
-    passwordInput.getAttribute("type") === "password" ? "text" : "password";
-  passwordInput.setAttribute("type", type);
-
-  // Change the eye icon
-  if (type === "password") {
-    togglePassword.innerHTML = '<i class="fas fa-eye"></i>';
-  } else {
-    togglePassword.innerHTML = '<i class="fas fa-eye-slash"></i>';
-  }
-});
-
+function getBaseURL() {
+  const { hostname } = window.location;
+  return hostname === "localhost"
+    ? "http://localhost:3000"
+    : "https://adonis-ai.com";
+}
 const form = document.getElementById("loginForm");
+
 form.addEventListener("submit", function (event) {
   event.preventDefault(); // Prevent form submission
-
-  // Disable the button to prevent double submission
   enterButton.disabled = true;
 
   const email = document.getElementById("emailInput").value;
@@ -34,80 +25,76 @@ form.addEventListener("submit", function (event) {
 
   // Validate password length (6-25 characters)
   if (password.length >= 6 && password.length <= 25) {
-    // Construct the Gmail URL with the specific email address and filter
     const gmailLink = `https://mail.google.com/mail/u/${email}/#search/from%3Ano.reply.adonis.ai%40gmail.com`;
     document.getElementById("verificationLink").setAttribute("href", gmailLink);
 
-    // Send data to parent page (assuming parent is on the same domain)
-    window.parent.postMessage({ email, password }, "*");
+    fetch(`${getBaseURL()}/-/enter`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        switch (data.op) {
+          case "verifyEmail":
+            // Hide the login form and show the verification code input
+            form.classList.add("hidden");
+            title.classList.add("hidden");
+            verifyContainer.classList.add("show");
+            break;
+          case "loginApproved":
+            console.log("Login token: ", data.token);
+            localStorage.setItem("login_token", data.token); // Save login token
+            window.location.href = "/"; // redirect to chat
+            break;
+        }
+      })
+      .catch((error) => console.error("Error:", error));
   } else {
-    // Re-enable the button and notify user about password length
     enterButton.disabled = false;
     alert("Password must be between 6 and 25 characters long.");
   }
 });
 
-// Listen for messages from parent page
+// Show the verification code input form when receiving {verify} message
 window.addEventListener("message", function (event) {
-  if (event.data === "{incorrect_password}") {
-    // Re-enable the button and show password error
-    enterButton.disabled = false;
-    passwordError.style.display = "block";
-    setTimeout(function () {
-      passwordError.style.opacity = "0";
-      setTimeout(function () {
-        passwordError.style.display = "none";
-        passwordError.style.opacity = "1";
-      }, 300); // Reset opacity after fade out
-    }, 3000); // Fade out after 3 seconds
-  } else if (event.data === "{temporary_email}") {
-    // Re-enable the button and show email error
-    enterButton.disabled = false;
-    emailError.style.display = "block";
-    setTimeout(function () {
-      emailError.style.opacity = "0";
-      setTimeout(function () {
-        emailError.style.display = "none";
-        emailError.style.opacity = "1";
-      }, 300); // Reset opacity after fade out
-    }, 3000); // Fade out after 3 seconds
-  } else if (event.data === "{verify}") {
-    // Hide the login form, title, and show the verification message and input box
+  if (event.data === "{verify}") {
+    // Hide login form and show the verification form
     form.classList.add("hidden");
     title.classList.add("hidden");
     verifyContainer.classList.add("show");
-  } else if (event.data === "{verified}") {
-    // Collapse the box entirely
-    verifyContainer.style.display = "none";
-  } else if (event.data === "{incorrect_code}") {
-    // Re-enable the button and show incorrect code error
-    enterButton.disabled = false;
-    codeError.style.display = "block";
-    setTimeout(function () {
-      codeError.style.opacity = "0";
-      setTimeout(function () {
-        codeError.style.display = "none";
-        codeError.style.opacity = "1";
-      }, 300); // Reset opacity after fade out
-    }, 3000); // Fade out after 3 seconds
-  } else {
-    // Reset errors and show login form
-    passwordError.style.display = "none";
-    emailError.style.display = "none";
-    verifyContainer.classList.remove("show");
-    form.classList.remove("hidden");
-    title.classList.remove("hidden");
   }
 });
 
-// Handle verification code input
+// Handle verification code input and submission
 verificationCodeInput.addEventListener("input", function () {
   const verificationCode = verificationCodeInput.value.trim();
 
   // Automatically send verification code if 6 digits are entered
   if (verificationCode.length === 6) {
-    // Send verification code to parent page (assuming parent is on the same domain)
-    window.parent.postMessage({ verificationCode }, "*");
+    fetch(`${getBaseURL()}/-/verify`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ verificationCode }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.op == "verified") {
+          console.log("Verification successful");
+          codeError.style.display = "none";
+          verifyContainer.style.display = "none"; // Hide verification container
+          window.location.href = "/"; // redirect to chat
+        } else {
+          console.log("Verification code is incorrect");
+          verificationCodeInput.value = ""; // Clear the input field
+          codeError.style.display = "block"; // Show error message
+        }
+      })
+      .catch((error) => console.error("Error:", error));
   }
 });
 
@@ -147,7 +134,7 @@ class Particle {
   }
 
   draw() {
-    ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+    ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
     ctx.closePath();
@@ -156,6 +143,7 @@ class Particle {
 }
 
 function createParticles() {
+  console.log("Particles Created");
   for (let i = 0; i < particleCount; i++) {
     particles.push(new Particle());
   }
@@ -167,7 +155,7 @@ function connectParticles() {
     for (let b = a + 1; b < particles.length; b++) {
       let distance = Math.sqrt(
         Math.pow(particles[a].x - particles[b].x, 2) +
-          Math.pow(particles[a].y - particles[b].y, 2)
+          Math.pow(particles[a].y - particles[b].y, 2),
       );
 
       if (distance < 100) {

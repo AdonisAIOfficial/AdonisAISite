@@ -8,79 +8,37 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 const accountManager = require("./backend/accountManager.js");
-const emailVerifier = require("./backend/emailVerifier.js");
 let userCount = 0;
 const PORT = process.env.PORT || 3000;
+app.use(express.json());
 app.use(express.static(path.join(__dirname, "./public")));
-let userMap = new Map();
-// WebSocket connection handler
-let blackList = new Set(); // sends the user to pay 
+let userMap = new Map(); // WebSocket connection handler
+let blackList = new Set(); // sends the user to pay
 let grayList = new Set(); // sends the user to login
 let whitelist = new Set(); // allows user to freely chat
+
 wss.on("connection", async (ws) => {
   userCount++;
   ws.userSessionId = uuidv4();
-  greyList.add(ws.userSessionId);
+  grayList.add(ws.userSessionId);
   ws.on("message", async (message) => {
     const json = JSON.parse(message);
     switch (json.op) {
       case "auth":
-
-      break;
-      case "enter":
-        let pollId = uuidv4();
-        const result = await accountManager.enter(json.email, json.password, pollId);
-        switch(result.op)
-        {
-          case "allowLogin":
-            ws.send(`{"op":"allowLogin","msg":"${result.msg}"}`);
-          break;
-          case "denyLogin":
-            ws.send(`{"op":"denyLogin","msg":"${result.msg}"}`);
-          break;
-          case "error":
-            ws.send(`{"op":"error","msg":"${result.msg}"}`);
-          break;
-        }
-        while(true)
-          {
-            let commandFromPoll = await accountManager.getPoll(pollId);
-            if(commandFromPoll=="sendVerificationEmail")
-              {
-                const verifyCode = await emailVerifier.sendVerificationEmail(json.email);
-                ws.send(`{"op":"verificationCodeNeeded"}`);
-                break;
-              }
-          }
-      break;
+        break;
+      case "denyLogin":
+        ws.send(`{"op":"denyLogin","msg":"${result.msg}"}`);
+        break;
+      case "error":
+        ws.send(`{"op":"error","msg":"${result.msg}"}`);
+        break;
       case "msg":
-      break;
+        break;
       default:
         console.log("Unknown op: " + json.op);
-      break;
+        break;
     }
-    // if(json.op=="auth")
-    //   {
-    //    if(json.token==null)
-    //     {
-
-    //     } 
-    //   }
-    /*
-    ws.userId = uuidv4();
-  
-  let userAI = new AI();
-  console.log(userAI);
-  userMap.set(ws.userId, userAI);
-   */
-    // Retrieve the user's counter from the map using userId
-    // let userAI = userMap.get(ws.userId);
-    // userAI.respond()
-    // ws.send(`{"op":"ch","ch":"${int}"}`);
-    // ws.send(`{"op":"end"}`);
   });
-
-  // Handle client disconnection
   ws.on("close", () => {
     userCount--;
 
@@ -88,7 +46,6 @@ wss.on("connection", async (ws) => {
     userMap.delete(ws.userId);
   });
 });
-
 // Serve HTML files
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public/chat", "chat.html"));
@@ -100,21 +57,50 @@ app.get("/landing", (req, res) => {
 app.get("/enter", (req, res) => {
   res.sendFile(path.join(__dirname, "public/enter", "enter.html"));
 });
+// Endpoints: GET, POST, etc.
+app.post("/-/enter", (req, res) => {
+  const emitterId = uuidv4();
+  accountManager.emitter.on(emitterId, (data) => {
+    switch (data.op) {
+      case "verifyEmail":
+        res.json({ op: data.op, verificationId: data.verificationId });
+        break;
+      case "loginApproved":
+        res.json({ op: data.op, token: data.token });
+        break;
+      case "temporaryEmailForbidden":
+        res.json({ op: data.op });
+        break;
+      case "error":
+        res.json({ op: data.op });
+        break;
+    }
+  });
+  accountManager.enter(req.body.email, req.body.password, emitterId);
+});
+app.post("/-/verify", (req, res) => {
+  if (!req.body.code) { // check if code is even provided
+    res.json({ op: "incorrect-code" });
+    return; 
+  }
+  if (accountManager.codes[req.body.verificationId] == req.body.code) { // check if the verification code provided is correct
+    // finalise signup:
+    const loginToken = accountManager.createAccount(req.body.email, req.body.password);
+    res.json({ op: "verified", token: loginToken });
+    // create pending account
+    // generate login token
+    // return login token with op "verified"
+  } else {
+    res.json({ op: "incorrect-code" });
+  }
+});
+
+app.post("/-/deleteAccount", (req, res) => {});
+// Handle 404 for unrecognized routes
+app.use((req, res) => {
+  res.status(404).sendFile(path.join(__dirname, "public/404", "404.html"));
+});
+
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
-
-/**
- * The user object:
- * email: {
- *  chat: [],
- *  stats: {
- *    info: "",
- *    cost: 0,
- *    paying: false
- *  }
- * accessToken: "",
- * accessTokenCreatedAt: "",
- * password: "",
- * }
- */

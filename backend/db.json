@@ -1,10 +1,10 @@
 {
-    "userId123": {
-        "chat": [
-            {
-                "sender": "user123",
-                "message": "hello"
-            }
-        ]
-    }
+  "123@gmail.com": {
+    "chat": [
+      {
+        "sender": "user123",
+        "message": "hello"
+      }
+    ]
+  }
 }
