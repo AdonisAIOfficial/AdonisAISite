@@ -1,21 +1,25 @@
-const dbManager = require("./dbManager.js");
-let db = dbManager.readDatabase();
+const db_manager = require("./db-manager.js");
+let db = db_manager.readDatabase();
 const bcrypt = require("bcryptjs");
 const { v4: uuidv4 } = require("uuid");
 const EventEmitter = require("events");
 const emitter = new EventEmitter();
-const emailVerifier = require("./emailVerifier.js");
+const emailVerifier = require("./email-verifier.js");
+const tools = require("./tools.js");
 
 let codes = [];
 
-function generateLoginToken() {
+async function generateLoginToken() {
   const loginToken = uuidv4();
-  bcrypt.hash(loginToken, 1, function (err, hash) {
-    if (err) throw err;
-    return { token: loginToken, hash: hash };
-  });
-}
+  const saltRounds = 10; // Makes it practically impossible for Rainbow Table Attack
 
+  try {
+    const hash = await bcrypt.hash(loginToken, saltRounds);
+    return { token: loginToken, hash: hash };
+  } catch (err) {
+    throw new Error("Error generating hash: " + err.message);
+  }
+}
 async function enter(email, password, emitterId) {
   // try login first
   if (email in db) {
@@ -33,7 +37,7 @@ async function enter(email, password, emitterId) {
 
         // Store hashed login token in db
         db[email].loginToken = token_and_hash.hash;
-        dbManager.setValueAtPath(
+        db_manager.setValueAtPath(
           db,
           `users/${email}/loginToken`,
           token_and_hash.hash,
@@ -44,7 +48,7 @@ async function enter(email, password, emitterId) {
         return;
       } else {
         // Password is invalid, send message to client
-        emitter, emit({ op: "loginDenied" });
+        emitter.emit({ op: "loginDenied" });
         return;
       }
     });
@@ -65,11 +69,21 @@ async function enter(email, password, emitterId) {
     return;
   }
 }
-function createAccount(email, password)
-{
+async function createAccount(email, password) {
+  const ACCESS_TOKEN = await generateAccessToken();
+  let user_object = {
+    chat: [],
+    stats: {
+      info: "",
+      cost: 0,
+      paying: false
+    },
+    access_token: ACCESS_TOKEN,
+    access_token_created_at: tools.dd_mm_yy()
+  };
+  db_manager.setValueAtPath(db, `users/${email}`, user_object);
   // this is the final step of the signup
   // returns loginToken
-   
 }
 async function authenticate(email, loginToken) {
   // authentication logic
