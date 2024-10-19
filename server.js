@@ -2,16 +2,16 @@ const WebSocket = require("ws");
 const express = require("express");
 const http = require("http");
 const path = require("path");
-const AI = require("./backend/AI");
+const AI = require("./server-side/AI.js");
 const { v4: uuidv4 } = require("uuid");
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
-const accountManager = require("./backend/accountManager.js");
+const account_manager = require("./server-side/account-manager.js");
 let userCount = 0;
 const PORT = process.env.PORT || 3000;
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "./public")));
+app.use(express.static(path.join(__dirname, "./client-side")));
 let userMap = new Map(); // WebSocket connection handler
 let blackList = new Set(); // sends the user to pay
 let grayList = new Set(); // sends the user to login
@@ -48,19 +48,19 @@ wss.on("connection", async (ws) => {
 });
 // Serve HTML files
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public/chat", "chat.html"));
+  res.sendFile(path.join(__dirname, "client-side/chat", "chat.html"));
 });
 
 app.get("/landing", (req, res) => {
-  res.sendFile(path.join(__dirname, "public/landing", "landing.html"));
+  res.sendFile(path.join(__dirname, "client-side/landing", "landing.html"));
 });
 app.get("/enter", (req, res) => {
-  res.sendFile(path.join(__dirname, "public/enter", "enter.html"));
+  res.sendFile(path.join(__dirname, "client-side/enter", "enter.html"));
 });
 // Endpoints: GET, POST, etc.
 app.post("/-/enter", (req, res) => {
   const emitterId = uuidv4();
-  accountManager.emitter.on(emitterId, (data) => {
+  account_manager.emitter.on(emitterId, (data) => {
     switch (data.op) {
       case "verifyEmail":
         res.json({ op: data.op, verificationId: data.verificationId });
@@ -76,16 +76,23 @@ app.post("/-/enter", (req, res) => {
         break;
     }
   });
-  accountManager.enter(req.body.email, req.body.password, emitterId);
+  account_manager.enter(req.body.email, req.body.password, emitterId);
 });
 app.post("/-/verify", (req, res) => {
-  if (!req.body.code) { // check if code is even provided
+  if (!req.body.code) {
+    // check if code is even provided
     res.json({ op: "incorrect-code" });
-    return; 
+    return;
   }
-  if (accountManager.codes[req.body.verificationId] == req.body.code) { // check if the verification code provided is correct
+  if (account_manager.codes[req.body.verificationId] == req.body.code) {
+    // check if the verification code provided is correct
+    // remove the code from 'codes' array to free up memory
+    delete account_manager.codes[req.body.verificationId];
     // finalise signup:
-    const loginToken = accountManager.createAccount(req.body.email, req.body.password);
+    const loginToken = account_manager.createAccount(
+      req.body.email,
+      req.body.password,
+    );
     res.json({ op: "verified", token: loginToken });
     // create pending account
     // generate login token
@@ -98,7 +105,7 @@ app.post("/-/verify", (req, res) => {
 app.post("/-/deleteAccount", (req, res) => {});
 // Handle 404 for unrecognized routes
 app.use((req, res) => {
-  res.status(404).sendFile(path.join(__dirname, "public/404", "404.html"));
+  res.status(404).sendFile(path.join(__dirname, "client-side/404", "404.html"));
 });
 
 server.listen(PORT, () => {
