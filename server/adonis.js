@@ -22,10 +22,10 @@ class AI {
       // make sure no free trial is being abused
       if (stats.cost >= freeTrialCostThreshold && !stats.paying) {
         console.log("free trial ended");
-        require("wix-realtime-backend").publish(
-          { name: userId },
-          { content: "{free_trial_end}" }
-        );
+        // require("wix-realtime-backend").publish(
+        //   { name: userId },
+        //   { content: "{free_trial_end}" }
+        // );
         return; // stop here to avoid abuse
       }
       let contexts = await this.getContexts(userMessage);

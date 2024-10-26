@@ -25,6 +25,10 @@ form.addEventListener("submit", function (event) {
 
   // Validate password length (6-25 characters)
   if (password.length >= 6 && password.length <= 25) {
+    // Save password and email for short period in sessionStorage and clear there after.
+    // Also, using sessionStorage to avoid dealing with scopes.
+    sessionStorage.setItem("email", email);
+    sessionStorage.setItem("password", password);
     const gmailLink = `https://mail.google.com/mail/u/${email}/#search/from%3Ano.reply.adonis.ai%40gmail.com`;
     document.getElementById("verificationLink").setAttribute("href", gmailLink);
 
@@ -43,6 +47,7 @@ form.addEventListener("submit", function (event) {
             form.classList.add("hidden");
             title.classList.add("hidden");
             verifyContainer.classList.add("show");
+            sessionStorage.setItem("verificationId", data.verificationId);
             break;
           case "loginApproved":
             console.log("Login token: ", data.token);
@@ -58,16 +63,6 @@ form.addEventListener("submit", function (event) {
   }
 });
 
-// Show the verification code input form when receiving {verify} message
-window.addEventListener("message", function (event) {
-  if (event.data === "{verify}") {
-    // Hide login form and show the verification form
-    form.classList.add("hidden");
-    title.classList.add("hidden");
-    verifyContainer.classList.add("show");
-  }
-});
-
 // Handle verification code input and submission
 verificationCodeInput.addEventListener("input", function () {
   const verificationCode = verificationCodeInput.value.trim();
@@ -79,12 +74,24 @@ verificationCodeInput.addEventListener("input", function () {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ verificationCode }),
+      body: JSON.stringify({
+        verificationId: sessionStorage.getItem("verificationId"),
+        code: verificationCode,
+        email: sessionStorage.getItem("email"),
+        password: sessionStorage.getItem("password"),
+      }),
     })
       .then((response) => response.json())
       .then((data) => {
         if (data.op == "verified") {
           console.log("Verification successful");
+          // Remove saved email and password for safety.
+          // Note: Could just use 'sessionStorage.clear()' to remove all at once and to simplify. but that could cause problems in the future if we need sessionStorage for something else on this page.
+          localStorage.setItem("email", sessionStorage.getItem("email"));
+          localStorage.setItem("login_token", data.token);
+          sessionStorage.removeItem("email");
+          sessionStorage.removeItem("password");
+          sessionStorage.removeItem("verificationId");
           codeError.style.display = "none";
           verifyContainer.style.display = "none"; // Hide verification container
           window.location.href = "/"; // redirect to chat

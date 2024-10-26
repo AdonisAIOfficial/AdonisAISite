@@ -1,5 +1,5 @@
 const Stripe = require('stripe');
-const { STRIPE_SECRET_KEY } = require('./backend/secrets.js');
+const { STRIPE_SECRET_KEY } = require('./secrets.js');
 const stripe = new Stripe(STRIPE_SECRET_KEY);
 const adonisProductId = "prod_QRp1PH9aA80ISp";
 const adonisPriceObjId = "price_1PdRuBC2pXt17P3qVQtEpFIr";
