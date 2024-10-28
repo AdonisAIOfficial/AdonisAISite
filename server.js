@@ -15,21 +15,52 @@ app.use(express.static(path.join(__dirname, "./client")));
 
 wss.on("connection", async (ws) => {
   ws.id = uuidv4();
+  ws.authenticated = false;
   ws.on("message", async (message) => {
     const json = JSON.parse(message);
-    switch (json) {
-      case auth:
+    switch (json.op) {
+      case "auth":
         // client must provide email and login token
         if (!json.email || !json.token) {
           // incorrect authentication
-          ws.send(JSON.stringify({ error: 'Authentication failed: email and token are required. Try relogin at https://adonis-ai.com/enter' }));
+          ws.send(
+            JSON.stringify({
+              op: "auth_res",
+              code: 400,
+              message:
+                "Authentication failed: email and access token are required. Try relogin at https://adonis-ai.com/enter",
+            }),
+          );
+          break;
+        } else {
+          ws.authenticated = await account_manager.authenticate(
+            json.email,
+            json.token,
+          );
+          if (!ws.authenticated) {
+            // incorrect access token or email
+            ws.send(
+              JSON.stringify({
+                op: "auth_res",
+                code: 403,
+                message:
+                  "Authentication failed: email or access token invalid. Try relogin or signup at https://adonis-ai.com/enter",
+              }),
+            );
+          } else {
+            ws.send(
+              JSON.stringify({
+                op: "auth_res",
+                code: 200,
+                message: "Authentication successful.",
+              }),
+            );
+          }
+          break;
         }
-        account_manager.authenticate(json.email, json.token);
     }
   });
-  ws.on("close", () => {
-
-  });
+  ws.on("close", () => {});
 });
 // Serve HTML files
 app.get("/", (req, res) => {

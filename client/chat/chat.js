@@ -15,12 +15,33 @@ const threedotsButton = document.querySelector(".three-dots-button");
 let mobileMenuOpen = false;
 let feedbackBoxOpen = false;
 let pendingChunks = 0;
-//
+ws.onopen = function () {
+  // Authenticate upon connection open.
+  ws.send(
+    JSON.stringify({
+      op: "auth",
+      email: "example@gmail.com",
+      access_token: "123testing",
+    }),
+  );
+};
 ws.onmessage = async (event) => {
   // const message = await event.data.text();
   const message = event.data;
   console.log("Message from server: ", message);
   const json = JSON.parse(message);
+  switch (json.op) {
+    case "auth_res":
+      if (json.code == 200) {
+        console.log("Authenticated successfully.");
+      } else {
+        console.log(
+          "Problem with authentication. Redirecting to https://adonis-ai.com/enter",
+        );
+        window.location.href = `${getBaseURL()}/enter`;
+      }
+      break;
+  }
   if (json.op == "end") {
     // Ensure all chunks are processed before setting lastMessageDiv to null
     const checkChunksDone = setInterval(() => {
@@ -76,7 +97,7 @@ threedotsButton.addEventListener("click", function () {
 submitFeedbackButton.addEventListener("click", function () {
   window.parent.postMessage(
     { operation: "feedback", feedback: feedbackTextarea.value },
-    "*"
+    "*",
   );
   feedbackTextarea.value = "";
   submitFeedbackButton.innerHTML = "Thank you!";
@@ -230,7 +251,7 @@ function addChunk(chunk) {
       consolidatedSpan.className = "consolidated-text";
       consolidatedSpan.innerHTML = chunkElement.innerHTML.replace(
         /&nbsp;/g,
-        " "
+        " ",
       );
       consolidatedSpan.innerHTML = formatText(consolidatedSpan.innerHTML);
       lastMessageDiv.replaceChild(consolidatedSpan, chunkElement);
@@ -268,4 +289,10 @@ function clearChat() {
   while (messages.firstChild) {
     messages.removeChild(messages.firstChild);
   }
+}
+function getBaseURL() {
+  const { hostname } = window.location;
+  return hostname === "localhost"
+    ? "http://localhost:3000"
+    : "https://adonis-ai.com";
 }
