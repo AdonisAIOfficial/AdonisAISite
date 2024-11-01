@@ -1,13 +1,13 @@
-The user object:
-email: {
- chat: [],
- stats: {
-   info: "",
-   cost: 0,
-   paid: 0,
-   paying: false
- }
-access_token: "hashed token here",
-access_token_created_on: "dd.mm.yy",
-password: "hashed password here",
-}
+User table:
+                                   
+                                   Table "public.users"
+         Column          |          Type          | Collation | Nullable |     Default
+-------------------------+------------------------+-----------+----------+-----------------
+ email                   | character varying(255) |           | not null |
+ chat                    | text[]                 |           |          | ARRAY[]::text[]
+ stats                   | jsonb                  |           |          | '{}'::jsonb
+ access_token            | character varying(255) |           |          |
+ access_token_created_on | character varying(8)   |           |          |
+ password                | character varying(255) |           |          |
+Indexes:
+    "users_pkey" PRIMARY KEY, btree (email)

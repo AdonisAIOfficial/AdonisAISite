@@ -41,6 +41,7 @@ form.addEventListener("submit", function (event) {
     })
       .then((response) => response.json())
       .then((data) => {
+        console.log(data);
         switch (data.op) {
           case "verifyEmail":
             // Hide the login form and show the verification code input
@@ -49,10 +50,24 @@ form.addEventListener("submit", function (event) {
             verifyContainer.classList.add("show");
             sessionStorage.setItem("verificationId", data.verificationId);
             break;
+          case "temporaryEmailForbidden":
+            // Show temporary email forbidden message.
+            emailError.style.display = "block";
+            passwordError.style.display = "none";
+            enterButton.disabled = false; // Re-enable Enter button.
+            break;
+          case "loginDenied":
+            // Show password invalid message.
+            passwordError.style.display = "block";
+            emailError.style.display = "none";
+            enterButton.disabled = false;
+            break;
           case "loginApproved":
+            emailError.style.display = "none"; // Hide email error message
+            passwordError.style.display = "none"; // Hide password error message
             console.log("Login token: ", data.token);
-            localStorage.setItem("login_token", data.token); // Save login token
-            window.location.href = "/"; // redirect to chat
+            localStorage.setItem("login_token", data.token); // Save login token.
+            window.location.href = "/"; // Redirect to chat.
             break;
         }
       })

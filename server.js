@@ -75,6 +75,7 @@ app.get("/enter", (req, res) => {
 });
 // Endpoints: GET, POST, etc.
 app.post("/-/enter", async (req, res) => {
+  console.count();
   const response = await account_manager.enter(
     req.body.email,
     req.body.password,
@@ -89,9 +90,14 @@ app.post("/-/enter", async (req, res) => {
     case "temporaryEmailForbidden":
       res.json({ op: response.op });
       break;
+    case "loginDenied":
+      res.json({ op: response.op });
+      break;
     case "error":
       res.json({ op: response.op });
       break;
+    default:
+      res.json({ op: response.op });
   }
 });
 app.post("/-/verify", async (req, res) => {
