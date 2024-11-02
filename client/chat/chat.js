@@ -20,8 +20,8 @@ ws.onopen = function () {
   ws.send(
     JSON.stringify({
       op: "auth",
-      email: "example@gmail.com",
-      access_token: "123testing",
+      email: localStorage.getItem("email"),
+      token: localStorage.getItem("access_token"),
     }),
   );
 };

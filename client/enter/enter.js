@@ -65,8 +65,8 @@ form.addEventListener("submit", function (event) {
           case "loginApproved":
             emailError.style.display = "none"; // Hide email error message
             passwordError.style.display = "none"; // Hide password error message
-            console.log("Login token: ", data.token);
-            localStorage.setItem("login_token", data.token); // Save login token.
+            localStorage.setItem("email", sessionStorage.getItem("email")); // Set email.
+            localStorage.setItem("access_token", data.token); // Save login token.
             window.location.href = "/"; // Redirect to chat.
             break;
         }
@@ -103,7 +103,7 @@ verificationCodeInput.addEventListener("input", function () {
           // Remove saved email and password for safety.
           // Note: Could just use 'sessionStorage.clear()' to remove all at once and to simplify. but that could cause problems in the future if we need sessionStorage for something else on this page.
           localStorage.setItem("email", sessionStorage.getItem("email"));
-          localStorage.setItem("login_token", data.token);
+          localStorage.setItem("access_token", data.token);
           sessionStorage.removeItem("email");
           sessionStorage.removeItem("password");
           sessionStorage.removeItem("verificationId");

@@ -1,13 +1,15 @@
-User table:
-                                   
-                                   Table "public.users"
-         Column          |          Type          | Collation | Nullable |     Default
--------------------------+------------------------+-----------+----------+-----------------
- email                   | character varying(255) |           | not null |
- chat                    | text[]                 |           |          | ARRAY[]::text[]
- stats                   | jsonb                  |           |          | '{}'::jsonb
- access_token            | character varying(255) |           |          |
- access_token_created_on | character varying(8)   |           |          |
- password                | character varying(255) |           |          |
-Indexes:
-    "users_pkey" PRIMARY KEY, btree (email)
+CREATE TABLE users (
+email VARCHAR(255) PRIMARY KEY,
+paid float4 DEFAULT 0,
+paying bool DEFAULT FALSE,
+access_token VARCHAR(255),
+access_token_created_on DATE,
+password VARCHAR(255)
+);
+
+CREATE TABLE messages (
+id SERIAL PRIMARY KEY,
+email VARCHAR(255) REFERENCES users(email),
+message TEXT NOT NULL,
+timestamp TIMESTAMP(1) DEFAULT CURRENT_TIMESTAMP
+);

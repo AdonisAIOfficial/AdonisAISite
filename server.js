@@ -20,8 +20,10 @@ wss.on("connection", async (ws) => {
     const json = JSON.parse(message);
     switch (json.op) {
       case "auth":
+        console.log("auth 23:", json);
         // client must provide email and login token
         if (!json.email || !json.token) {
+          console.log("!!!!! ERROR HERE !!!!!");
           // incorrect authentication
           ws.send(
             JSON.stringify({
@@ -75,7 +77,6 @@ app.get("/enter", (req, res) => {
 });
 // Endpoints: GET, POST, etc.
 app.post("/-/enter", async (req, res) => {
-  console.count();
   const response = await account_manager.enter(
     req.body.email,
     req.body.password,
@@ -85,6 +86,7 @@ app.post("/-/enter", async (req, res) => {
       res.json({ op: response.op, verificationId: response.verificationId });
       break;
     case "loginApproved":
+      console.log("88:", response);
       res.json({ op: response.op, token: response.token });
       break;
     case "temporaryEmailForbidden":

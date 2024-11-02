@@ -18,7 +18,7 @@ function hash(to_hash, salt_rounds = 10) {
 async function enter(email, password) {
   const HASHED_PASSWORD_FROM_DB = await db_manager.exec(
     "SELECT password FROM users WHERE email = $1",
-    [email]
+    [email],
   );
 
   if (HASHED_PASSWORD_FROM_DB.rowCount > 0) {
@@ -26,14 +26,14 @@ async function enter(email, password) {
 
     // Use bcrypt.compareSync to verify the password
     const passwordMatches = bcrypt.compareSync(password, hashedPasswordFromDb);
-    
+
     if (passwordMatches) {
-      console.log("PASSWORDS MATCH");
       const token_and_hash = generateAccessToken();
       await db_manager.exec(
         "UPDATE users SET access_token = $1, access_token_created_on = $2 WHERE email = $3",
-        [token_and_hash.token, tools.getCurrentDate(), email]
+        [token_and_hash.hash, tools.getCurrentDate(), email],
       );
+      console.log(token_and_hash);
       return { op: "loginApproved", token: token_and_hash.token };
     } else {
       return { op: "loginDenied" };
@@ -55,7 +55,7 @@ async function enter(email, password) {
   }
 }
 async function createAccount(email, password) {
-  const ACCESS_TOKEN = generateAccessToken();
+  const TOKEN_AND_HASH = generateAccessToken();
   const response = await db_manager.exec(
     `INSERT INTO users (
        email, chat, stats, access_token, access_token_created_on, password
@@ -66,30 +66,41 @@ async function createAccount(email, password) {
       email,
       [], // Empty array for chat
       JSON.stringify({ info: "", cost: 0, paying: false }), // JSONB object for stats
-      ACCESS_TOKEN,
+      TOKEN_AND_HASH.hash,
       tools.getCurrentDate(), // Formatted date
       hash(password), // Hashed password
     ],
   );
-  return ACCESS_TOKEN;
+  return TOKEN_AND_HASH.token;
 }
 function generateAccessToken(length = 32, saltRounds = 3) {
-  // Generate a random access token
+  // Generate a random access token.
   const token = crypto.randomBytes(length).toString("hex");
 
   // Hash the token using bcrypt
   // Note: Only 3 salt rounds used, as access tokens aren't as sensitive as passwords and thus don't need to be salted as much. Plus, access tokens need to be used every time the user visits the website - thus it would be very computationaly expensive to use 10 salt rounds on every client connection. It would be slow and excessive. And finally, access tokens are discarded every X months.
-  const hashed_token = bcrypt.hashSync(token, saltRounds);
-
+  const hash = bcrypt.hashSync(token, saltRounds);
   return { token, hash };
 }
 async function authenticate(email, access_token) {
-  const HASHED_ACCESS_TOKEN = hash(access_token, 3);
+  // TODO: Check if the token has expired ( by checking access_token_created_on )
   const result = await db_manager.exec(
-    "SELECT * FROM users WHERE email = $1 AND access_token = $2",
-    [email, access_token],
+    "SELECT access_token FROM users WHERE email = $1",
+    [email],
   );
-  return result.length > 0; // If the result is 1, then the client will be authenticated.
+  if (result.rowCount == 0) {
+    // Account doesn't exist.
+    return false;
+  }
+  console.log("access_token:", access_token);
+  console.log("from db:", result.rows[0].access_token);
+  const authenticated = bcrypt.compareSync(
+    access_token,
+    result.rows[0].access_token,
+  );
+  // authenticated = false, even though it should be true
+  console.log("authenticated:", authenticated);
+  return authenticated;
 }
 
 async function isTempMail(email) {
