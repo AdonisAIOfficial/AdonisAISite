@@ -1,15 +1,16 @@
 CREATE TABLE users (
-email VARCHAR(255) PRIMARY KEY,
-paid float4 DEFAULT 0,
-paying bool DEFAULT FALSE,
-access_token VARCHAR(255),
-access_token_created_on DATE,
-password VARCHAR(255)
+    email VARCHAR(255) PRIMARY KEY,
+    paid float4 DEFAULT 0 NOT NULL,
+    paying bool DEFAULT FALSE NOT NULL,
+    access_token VARCHAR(255) NOT NULL,
+    access_token_created_on DATE DEFAULT CURRENT_DATE NOT NULL,
+    password VARCHAR(255) NOT NULL
 );
+
 
 CREATE TABLE messages (
 id SERIAL PRIMARY KEY,
-email VARCHAR(255) REFERENCES users(email),
+email VARCHAR(255) REFERENCES users(email) NOT NULL,
 message TEXT NOT NULL,
-timestamp TIMESTAMP(1) DEFAULT CURRENT_TIMESTAMP
+timestamp TIMESTAMP(1) DEFAULT CURRENT_TIMESTAMP NOT NULL
 );

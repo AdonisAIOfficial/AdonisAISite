@@ -23,7 +23,6 @@ wss.on("connection", async (ws) => {
         console.log("auth 23:", json);
         // client must provide email and login token
         if (!json.email || !json.token) {
-          console.log("!!!!! ERROR HERE !!!!!");
           // incorrect authentication
           ws.send(
             JSON.stringify({

@@ -1,80 +1,80 @@
 body,
 html {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: rgb(0, 0, 0);
-  font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgb(0, 0, 0);
+    font-family: Arial, sans-serif;
 }
 
 .container {
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-  overflow: hidden;
-  width: 350px;
-  /* Increased width */
-  padding: 30px;
-  /* Increased padding */
-  box-sizing: border-box;
-  text-align: center;
-  position: relative;
-  z-index: 1;
-  /* To make sure it stays above the canvas */
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    width: 350px;
+    /* Increased width */
+    padding: 30px;
+    /* Increased padding */
+    box-sizing: border-box;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+    /* To make sure it stays above the canvas */
 }
 
 canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -3;
-  /* Place canvas behind other content */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    /* Place canvas behind other content */
 }
 
 .form input {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 15px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  box-sizing: border-box;
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
 }
 
 .form button {
-  width: 100%;
-  padding: 10px;
-  border: none;
-  border-radius: 5px;
-  background: #000000;
-  color: white;
-  font-size: 15px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.3s;
-  box-sizing: border-box;
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background: #000000;
+    color: white;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s;
+    box-sizing: border-box;
 }
 
 .form button:hover {
-  background: #242424;
+    background: #242424;
 }
 
 .form button:disabled {
-  background: #3d3d3d;
+    background: #3d3d3d;
 }
 
 /* Styles for the eye icon */
 .password-toggle {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  cursor: pointer;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
 }
 
 /* Style for the error message */
@@ -82,45 +82,44 @@ canvas {
 #emailError,
 #verifyMessage,
 #codeError {
-  color: red;
-  display: none;
-  font-size: 14px;
-  margin-top: -10px;
-  /* Adjust to align with input */
-  opacity: 1;
-  transition: opacity 0.3s ease-in-out;
+    color: red;
+    display: none;
+    font-size: 14px;
+    margin-top: -10px;
+    /* Adjust to align with input */
+    opacity: 1;
+    transition: opacity 0.3s ease-in-out;
 }
-
 .verify-container {
-  display: none;
+    display: none;
 }
 
 .verify-container.show {
-  display: block;
+    display: block;
 }
 
 .verify-input {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 15px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  box-sizing: border-box;
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
 }
 
 .hidden {
-  display: none;
+    display: none;
 }
 
 /* Style for the verification link */
 #verificationLink {
-  display: block;
-  margin-top: 10px;
-  color: #000000;
-  text-decoration: none;
+    display: block;
+    margin-top: 10px;
+    color: #000000;
+    text-decoration: none;
 }
 
 #verificationLink:hover {
-  text-decoration: underline;
-  color: #242424;
+    text-decoration: underline;
+    color: #242424;
 }

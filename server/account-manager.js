@@ -58,16 +58,13 @@ async function createAccount(email, password) {
   const TOKEN_AND_HASH = generateAccessToken();
   const response = await db_manager.exec(
     `INSERT INTO users (
-       email, chat, stats, access_token, access_token_created_on, password
+       email, access_token, password
      ) VALUES (
-       $1, $2, $3, $4, $5, $6
+       $1, $2, $3
      )`,
     [
       email,
-      [], // Empty array for chat
-      JSON.stringify({ info: "", cost: 0, paying: false }), // JSONB object for stats
       TOKEN_AND_HASH.hash,
-      tools.getCurrentDate(), // Formatted date
       hash(password), // Hashed password
     ],
   );
