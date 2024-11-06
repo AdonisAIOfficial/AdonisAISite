@@ -29,11 +29,11 @@ async function enter(email, password) {
 
     if (passwordMatches) {
       const token_and_hash = generateAccessToken();
+      const currentDate = new Date().toISOString().split("T")[0]; // In YYYY-MM-DD format, which is used in SQL.
       await db_manager.exec(
         "UPDATE users SET access_token = $1, access_token_created_on = $2 WHERE email = $3",
-        [token_and_hash.hash, tools.getCurrentDate(), email],
+        [token_and_hash.hash, currentDate, email],
       );
-      console.log(token_and_hash);
       return { op: "loginApproved", token: token_and_hash.token };
     } else {
       return { op: "loginDenied" };
@@ -79,25 +79,40 @@ function generateAccessToken(length = 32, saltRounds = 3) {
   const hash = bcrypt.hashSync(token, saltRounds);
   return { token, hash };
 }
+const thirtyDaysInMillis = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
 async function authenticate(email, access_token) {
-  // TODO: Check if the token has expired ( by checking access_token_created_on )
+  // Get the current date in UTC and format it as YYYY-MM-DD
+  const currentDate = new Date().toISOString().split("T")[0]; // Get only the date part
+
   const result = await db_manager.exec(
-    "SELECT access_token FROM users WHERE email = $1",
+    "SELECT access_token, access_token_created_on FROM users WHERE email = $1",
     [email],
   );
-  if (result.rowCount == 0) {
-    // Account doesn't exist.
-    return false;
+
+  if (result.rowCount === 0) {
+    // Account doesn't exist
+    return { auth: false, account_not_exist: true };
   }
-  console.log("access_token:", access_token);
-  console.log("from db:", result.rows[0].access_token);
-  const authenticated = bcrypt.compareSync(
-    access_token,
-    result.rows[0].access_token,
-  );
-  // authenticated = false, even though it should be true
-  console.log("authenticated:", authenticated);
-  return authenticated;
+
+  const { access_token: storedToken, access_token_created_on } = result.rows[0];
+
+  // Ensure stored date is in YYYY-MM-DD format
+  const tokenCreatedOn = new Date(access_token_created_on)
+    .toISOString()
+    .split("T")[0];
+
+  // Check if the token has expired (older than 30 days)
+  const currentDateMillis = new Date(currentDate).getTime();
+  const tokenCreatedOnMillis = new Date(tokenCreatedOn).getTime();
+
+  if (currentDateMillis - tokenCreatedOnMillis > thirtyDaysInMillis) {
+    // Token is expired
+    return { auth: false, expired: true };
+  }
+
+  // Check if the provided access_token matches the stored one
+  const authenticated = bcrypt.compareSync(access_token, storedToken);
+  return { auth: authenticated };
 }
 
 async function isTempMail(email) {

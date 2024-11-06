@@ -8,7 +8,6 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 const account_manager = require("./server/account-manager.js");
-let userCount = 0;
 const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "./client")));
@@ -20,7 +19,6 @@ wss.on("connection", async (ws) => {
     const json = JSON.parse(message);
     switch (json.op) {
       case "auth":
-        console.log("auth 23:", json);
         // client must provide email and login token
         if (!json.email || !json.token) {
           // incorrect authentication
@@ -34,11 +32,22 @@ wss.on("connection", async (ws) => {
           );
           break;
         } else {
-          ws.authenticated = await account_manager.authenticate(
+          const result = await account_manager.authenticate(
             json.email,
             json.token,
           );
-          if (!ws.authenticated) {
+          ws.authenticated = result.auth;
+          if (!ws.authenticated && result.expired == true) {
+            // If token is valid but expired
+            ws.send(
+              JSON.stringify({
+                op: "auth_res",
+                code: 401,
+                message:
+                  "Access token has expired. Relogin or signup at https://adonis-ai.com/enter",
+              }),
+            );
+          } else if (!ws.authenticated) {
             // incorrect access token or email
             ws.send(
               JSON.stringify({
@@ -49,6 +58,7 @@ wss.on("connection", async (ws) => {
               }),
             );
           } else {
+            ws.email = json.email;
             ws.send(
               JSON.stringify({
                 op: "auth_res",
@@ -74,6 +84,9 @@ app.get("/landing", (req, res) => {
 app.get("/enter", (req, res) => {
   res.sendFile(path.join(__dirname, "client/enter", "enter.html"));
 });
+app.get("/settings", (req, res) => {
+  res.sendFile(path.join(__dirname, "client/settings", "settings.html"));
+});
 // Endpoints: GET, POST, etc.
 app.post("/-/enter", async (req, res) => {
   const response = await account_manager.enter(
@@ -85,7 +98,6 @@ app.post("/-/enter", async (req, res) => {
       res.json({ op: response.op, verificationId: response.verificationId });
       break;
     case "loginApproved":
-      console.log("88:", response);
       res.json({ op: response.op, token: response.token });
       break;
     case "temporaryEmailForbidden":

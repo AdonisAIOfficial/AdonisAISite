@@ -1,39 +1,66 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Login/Signup</title>
+        <link rel="stylesheet" href="./enter.css" />
+    </head>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login/Signup</title>
-  <link rel="stylesheet" href="./enter.css" />
-</head>
+    <body>
+        <canvas id="networkCanvas"></canvas>
+        <div class="container">
+            <h2 id="title">Login / Signup</h2>
+            <form class="form" id="loginForm">
+                <input
+                    type="email"
+                    id="emailInput"
+                    placeholder="Email"
+                    required
+                />
+                <div style="position: relative">
+                    <input
+                        type="password"
+                        id="passwordInput"
+                        placeholder="Password"
+                        required
+                    />
+                    <span id="passwordError">Incorrect password.</span>
+                    <span id="emailError">Temporary emails are forbidden.</span>
+                </div>
+                <button type="submit">Enter</button>
+            </form>
 
-<body>
-  <canvas id="networkCanvas"></canvas>
-  <div class="container">
-    <h2 id="title">Login / Signup</h2>
-    <form class="form" id="loginForm">
-      <input type="email" id="emailInput" placeholder="Email" required />
-      <div style="position: relative">
-        <input type="password" id="passwordInput" placeholder="Password" required />
-        <span id="passwordError">Incorrect password.</span>
-        <span id="emailError">Temporary emails are forbidden.</span>
-      </div>
-      <button type="submit">Enter</button>
-    </form>
+            <div class="verify-container" id="verifyContainer">
+                <div id="verifyMessage">
+                    Check your email for the verification code.
+                </div>
+                <a href="#" id="verificationLink" target="_blank"
+                    >Click here to open Gmail</a
+                >
+                <input
+                    type="text"
+                    id="verificationCodeInput"
+                    class="verify-input"
+                    placeholder="Enter verification code"
+                    maxlength="6"
+                />
+                <span id="codeError">Incorrect code.</span>
+            </div>
+        </div>
 
-    <div class="verify-container" id="verifyContainer">
-      <div id="verifyMessage">
-        Check your email for the verification code.
-      </div>
-      <a href="#" id="verificationLink" target="_blank">Click here to open Gmail</a>
-      <input type="text" id="verificationCodeInput" class="verify-input" placeholder="Enter verification code"
-        maxlength="6" />
-      <span id="codeError">Incorrect code.</span>
-    </div>
-  </div>
+        <!-- Session Expired Modal -->
+        <div id="overlay" class="overlay">
+            <div class="token-expired">
+                <p>
+                    <b>Your access token has expired. Please login again.</b>
+                    <br />(Access tokens expire every 30 days to keep your
+                    account safe)<br />
+                </p>
+                <button id="close-button">OK</button>
+            </div>
+        </div>
 
-  <script src="./enter.js"></script>
-</body>
-
+        <script src="./enter.js"></script>
+    </body>
 </html>

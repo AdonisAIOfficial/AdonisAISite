@@ -7,14 +7,18 @@ const verificationCodeInput = document.getElementById("verificationCodeInput");
 const title = document.getElementById("title");
 const codeError = document.getElementById("codeError");
 const enterButton = document.querySelector('button[type="submit"]');
-
-function getBaseURL() {
-  const { hostname } = window.location;
-  return hostname === "localhost"
-    ? "http://localhost:3000"
-    : "https://adonis-ai.com";
-}
+// Check if redirected, because access token expired
 const form = document.getElementById("loginForm");
+// Check for the "expired" flag in localStorage
+if (localStorage.getItem("access_token_expired") == "true") {
+  document.getElementById("overlay").style.display = "flex";
+}
+
+// Close the modal on button click
+document.getElementById("close-button").onclick = function () {
+  document.getElementById("overlay").style.display = "none";
+  localStorage.removeItem("access_token_expired"); // Remove the flag after user clicks "OK"
+};
 
 form.addEventListener("submit", function (event) {
   event.preventDefault(); // Prevent form submission
@@ -32,7 +36,7 @@ form.addEventListener("submit", function (event) {
     const gmailLink = `https://mail.google.com/mail/u/${email}/#search/from%3Ano.reply.adonis.ai%40gmail.com`;
     document.getElementById("verificationLink").setAttribute("href", gmailLink);
 
-    fetch(`${getBaseURL()}/-/enter`, {
+    fetch(`${window.location.origin}/-/enter`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -84,7 +88,7 @@ verificationCodeInput.addEventListener("input", function () {
 
   // Automatically send verification code if 6 digits are entered
   if (verificationCode.length === 6) {
-    fetch(`${getBaseURL()}/-/verify`, {
+    fetch(`${window.location.origin}/-/verify`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -100,7 +104,7 @@ verificationCodeInput.addEventListener("input", function () {
       .then((data) => {
         if (data.op == "verified") {
           console.log("Verification successful");
-          // Remove saved email and password for safety.
+          // Remove saved email and password on session for safety and add email and access token to local. 
           // Note: Could just use 'sessionStorage.clear()' to remove all at once and to simplify. but that could cause problems in the future if we need sessionStorage for something else on this page.
           localStorage.setItem("email", sessionStorage.getItem("email"));
           localStorage.setItem("access_token", data.token);
@@ -165,7 +169,6 @@ class Particle {
 }
 
 function createParticles() {
-  console.log("Particles Created");
   for (let i = 0; i < particleCount; i++) {
     particles.push(new Particle());
   }

@@ -1,5 +1,5 @@
-// Init
-const ws = new WebSocket("ws://localhost:3000");
+const protocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+const ws = new WebSocket(`${protocol}${window.location.hostname}:3000`);
 const textarea = document.querySelector(".auto-expanding-textarea");
 const sendButton = document.querySelector(".send-button");
 const messages = document.querySelector(".messages");
@@ -15,7 +15,11 @@ const threedotsButton = document.querySelector(".three-dots-button");
 let mobileMenuOpen = false;
 let feedbackBoxOpen = false;
 let pendingChunks = 0;
+
 ws.onopen = function () {
+  // If user doesn't have email or access token, don't even bother wasting the servers resources checking. Just send to /enter page.
+  if (!localStorage.getItem("email") || !localStorage.getItem("access_token"))
+    window.location.href = window.location.origin + "/enter";
   // Authenticate upon connection open.
   ws.send(
     JSON.stringify({
@@ -34,11 +38,18 @@ ws.onmessage = async (event) => {
     case "auth_res":
       if (json.code == 200) {
         console.log("Authenticated successfully.");
+      } else if (json.code == 401) {
+        // Access token expired.
+        console.log(
+          `Access token has expired. Redirecting to ${window.location.origin}/enter`,
+        );
+        localStorage.setItem("access_token_expired", true);
+        window.location.href = `${window.location.origin}/enter`;
       } else {
         console.log(
-          "Problem with authentication. Redirecting to https://adonis-ai.com/enter",
+          `Problem with authentication. Redirecting to ${window.location.origin}/enter`,
         );
-        window.location.href = `${getBaseURL()}/enter`;
+        window.location.href = `${window.location.origin}/enter`;
       }
       break;
   }
@@ -133,7 +144,7 @@ const maxRows = 6;
 const lineHeight = parseInt(window.getComputedStyle(textarea).lineHeight);
 settingsButton.addEventListener("click", function () {
   localStorage.setItem("toggledMode", mode);
-  window.parent.postMessage({ operation: "to_settings" }, "*");
+  window.location.href = window.location.origin + "/settings";
 });
 
 textarea.addEventListener("input", function () {
@@ -289,10 +300,4 @@ function clearChat() {
   while (messages.firstChild) {
     messages.removeChild(messages.firstChild);
   }
-}
-function getBaseURL() {
-  const { hostname } = window.location;
-  return hostname === "localhost"
-    ? "http://localhost:3000"
-    : "https://adonis-ai.com";
 }
