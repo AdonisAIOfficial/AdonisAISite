@@ -1,12 +1,12 @@
 CREATE TABLE users (
-    email VARCHAR(255) PRIMARY KEY,
-    paid float4 DEFAULT 0 NOT NULL,
-    paying bool DEFAULT FALSE NOT NULL,
-    access_token VARCHAR(255) NOT NULL,
-    access_token_created_on DATE DEFAULT CURRENT_DATE NOT NULL,
-    password VARCHAR(255) NOT NULL
+email VARCHAR(255) PRIMARY KEY,
+paid float4 DEFAULT 0 NOT NULL,
+paying bool DEFAULT FALSE NOT NULL,
+auth_token VARCHAR(255) NOT NULL,
+auth_token_created_on DATE DEFAULT CURRENT_DATE NOT NULL,
+password VARCHAR(255) NOT NULL,
+chat_updated_at TIMESTAMP(1) DEFAULT CURRENT_TIMESTAMP
 );
-
 
 CREATE TABLE messages (
 id SERIAL PRIMARY KEY,

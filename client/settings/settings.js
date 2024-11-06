@@ -9,15 +9,15 @@ unsubscribeButton.addEventListener("click", () => {
   window.parent.postMessage("!{to_cancel}!", "*");
 });
 ws.onopen = function () {
-  // If user doesn't have email or access token, don't even bother wasting the servers resources checking. Just send to /enter page.
-  if (!localStorage.getItem("email") || !localStorage.getItem("access_token"))
+  // If user doesn't have email or auth token, don't even bother wasting the servers resources checking. Just send to /enter page.
+  if (!localStorage.getItem("email") || !localStorage.getItem("auth_token"))
     window.location.href = window.location.origin + "/enter";
   // Authenticate upon connection open.
   ws.send(
     JSON.stringify({
       op: "auth",
       email: localStorage.getItem("email"),
-      token: localStorage.getItem("access_token"),
+      token: localStorage.getItem("auth_token"),
     }),
   );
 };
@@ -30,11 +30,11 @@ ws.onmessage = async (event) => {
       if (json.code == 200) {
         console.log("Authenticated successfully.");
       } else if (json.code == 401) {
-        // Access token expired.
+        // Auth token expired.
         console.log(
-          `Access token has expired. Redirecting to ${window.location.origin}/enter`,
+          `Auth token has expired. Redirecting to ${window.location.origin}/enter`,
         );
-        localStorage.setItem("access_token_expired", true);
+        localStorage.setItem("auth_token_expired", true);
         window.location.href = `${window.location.origin}/enter`;
       } else {
         console.log(
@@ -107,7 +107,7 @@ returnToChatButton.addEventListener("click", function () {
 const logoutButton = document.querySelector(".logout-button");
 logoutButton.addEventListener("click", function () {
   localStorage.removeItem("email");
-  localStorage.removeItem("access_token");
+  localStorage.removeItem("auth_token");
   window.location.href = window.location.origin + "/enter";
 });
 

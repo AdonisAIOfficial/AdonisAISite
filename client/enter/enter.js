@@ -7,17 +7,17 @@ const verificationCodeInput = document.getElementById("verificationCodeInput");
 const title = document.getElementById("title");
 const codeError = document.getElementById("codeError");
 const enterButton = document.querySelector('button[type="submit"]');
-// Check if redirected, because access token expired
+// Check if redirected, because auth token expired
 const form = document.getElementById("loginForm");
 // Check for the "expired" flag in localStorage
-if (localStorage.getItem("access_token_expired") == "true") {
+if (localStorage.getItem("auth_token_expired") == "true") {
   document.getElementById("overlay").style.display = "flex";
 }
 
 // Close the modal on button click
 document.getElementById("close-button").onclick = function () {
   document.getElementById("overlay").style.display = "none";
-  localStorage.removeItem("access_token_expired"); // Remove the flag after user clicks "OK"
+  localStorage.removeItem("auth_token_expired"); // Remove the flag after user clicks "OK"
 };
 
 form.addEventListener("submit", function (event) {
@@ -70,7 +70,7 @@ form.addEventListener("submit", function (event) {
             emailError.style.display = "none"; // Hide email error message
             passwordError.style.display = "none"; // Hide password error message
             localStorage.setItem("email", sessionStorage.getItem("email")); // Set email.
-            localStorage.setItem("access_token", data.token); // Save login token.
+            localStorage.setItem("auth_token", data.token); // Save login token.
             window.location.href = "/"; // Redirect to chat.
             break;
         }
@@ -104,10 +104,10 @@ verificationCodeInput.addEventListener("input", function () {
       .then((data) => {
         if (data.op == "verified") {
           console.log("Verification successful");
-          // Remove saved email and password on session for safety and add email and access token to local. 
+          // Remove saved email and password on session for safety and add email and auth token to local.
           // Note: Could just use 'sessionStorage.clear()' to remove all at once and to simplify. but that could cause problems in the future if we need sessionStorage for something else on this page.
           localStorage.setItem("email", sessionStorage.getItem("email"));
-          localStorage.setItem("access_token", data.token);
+          localStorage.setItem("auth_token", data.token);
           sessionStorage.removeItem("email");
           sessionStorage.removeItem("password");
           sessionStorage.removeItem("verificationId");

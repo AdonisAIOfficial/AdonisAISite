@@ -16,22 +16,25 @@ function hash(to_hash, salt_rounds = 10) {
   }
 }
 async function enter(email, password) {
-  const HASHED_PASSWORD_FROM_DB = await db_manager.exec(
+  const response = await db_manager.exec(
     "SELECT password FROM users WHERE email = $1",
     [email],
   );
 
-  if (HASHED_PASSWORD_FROM_DB.rowCount > 0) {
-    const hashedPasswordFromDb = HASHED_PASSWORD_FROM_DB.rows[0].password;
+  if (response.rowCount > 0) {
+    const HASHED_PASSWORD_FROM_DB = response.rows[0].password;
 
     // Use bcrypt.compareSync to verify the password
-    const passwordMatches = bcrypt.compareSync(password, hashedPasswordFromDb);
+    const passwords_match = bcrypt.compareSync(
+      password,
+      HASHED_PASSWORD_FROM_DB,
+    );
 
-    if (passwordMatches) {
-      const token_and_hash = generateAccessToken();
+    if (passwords_match) {
+      const token_and_hash = generateAuthToken();
       const currentDate = new Date().toISOString().split("T")[0]; // In YYYY-MM-DD format, which is used in SQL.
       await db_manager.exec(
-        "UPDATE users SET access_token = $1, access_token_created_on = $2 WHERE email = $3",
+        "UPDATE users SET auth_token = $1, auth_token_created_on = $2 WHERE email = $3",
         [token_and_hash.hash, currentDate, email],
       );
       return { op: "loginApproved", token: token_and_hash.token };
@@ -55,10 +58,10 @@ async function enter(email, password) {
   }
 }
 async function createAccount(email, password) {
-  const TOKEN_AND_HASH = generateAccessToken();
+  const TOKEN_AND_HASH = generateAuthToken();
   const response = await db_manager.exec(
     `INSERT INTO users (
-       email, access_token, password
+       email, auth_token, password
      ) VALUES (
        $1, $2, $3
      )`,
@@ -70,22 +73,22 @@ async function createAccount(email, password) {
   );
   return TOKEN_AND_HASH.token;
 }
-function generateAccessToken(length = 32, saltRounds = 3) {
-  // Generate a random access token.
+function generateAuthToken(length = 32, saltRounds = 3) {
+  // Generate a random token.
   const token = crypto.randomBytes(length).toString("hex");
 
   // Hash the token using bcrypt
-  // Note: Only 3 salt rounds used, as access tokens aren't as sensitive as passwords and thus don't need to be salted as much. Plus, access tokens need to be used every time the user visits the website - thus it would be very computationaly expensive to use 10 salt rounds on every client connection. It would be slow and excessive. And finally, access tokens are discarded every X months.
+  // Note: Only 3 salt rounds used, as auth tokens aren't as sensitive as passwords and thus don't need to be salted as much. Plus, auth tokens need to be used every time the user visits the website - thus it would be very computationaly expensive to use 10 salt rounds on every client connection. It would be slow and excessive. And finally, auth tokens are discarded every X months.
   const hash = bcrypt.hashSync(token, saltRounds);
   return { token, hash };
 }
 const thirtyDaysInMillis = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
-async function authenticate(email, access_token) {
+async function authenticate(email, auth_token) {
   // Get the current date in UTC and format it as YYYY-MM-DD
   const currentDate = new Date().toISOString().split("T")[0]; // Get only the date part
 
   const result = await db_manager.exec(
-    "SELECT access_token, access_token_created_on FROM users WHERE email = $1",
+    "SELECT auth_token, auth_token_created_on FROM users WHERE email = $1",
     [email],
   );
 
@@ -94,10 +97,10 @@ async function authenticate(email, access_token) {
     return { auth: false, account_not_exist: true };
   }
 
-  const { access_token: storedToken, access_token_created_on } = result.rows[0];
+  const { auth_token: storedToken, auth_token_created_on } = result.rows[0];
 
   // Ensure stored date is in YYYY-MM-DD format
-  const tokenCreatedOn = new Date(access_token_created_on)
+  const tokenCreatedOn = new Date(auth_token_created_on)
     .toISOString()
     .split("T")[0];
 
@@ -110,11 +113,39 @@ async function authenticate(email, access_token) {
     return { auth: false, expired: true };
   }
 
-  // Check if the provided access_token matches the stored one
-  const authenticated = bcrypt.compareSync(access_token, storedToken);
+  // Check if the provided auth_token matches the stored one
+  const authenticated = bcrypt.compareSync(auth_token, storedToken);
   return { auth: authenticated };
 }
 
+async function changePassword(email, auth_token, new_password) {
+  try {
+    if (!email || !auth_token || !new_password) return { code: 400 };
+    let response = await db_manager.exec(
+      "SELECT auth_token FROM users WHERE email = $1",
+      [email],
+    );
+    console.log(response);
+    if (response.rowCount < 1) return { code: 403 };
+    const AUTH_TOKEN_FROM_DB = response.rows[0].auth_token;
+    console.log(AUTH_TOKEN_FROM_DB);
+    const authenticated = bcrypt.compareSync(auth_token, AUTH_TOKEN_FROM_DB);
+    if (true) {
+      // if (authenticated) {
+      response = await db_manager.exec(
+        "UPDATE users SET password = $1 WHERE email = $2",
+        [hash(new_password), email],
+      );
+      return { code: 200 };
+    } else return { code: 401 };
+  } catch (error) {}
+}
+async function deleteAccount(email, auth_token) {
+  // PROCESS:
+  // Cancel stripe subscription ( with immediate termination )
+  // Delete all messages belonging to such user
+  // Delete user from
+}
 async function isTempMail(email) {
   // Make GET request to the API endpoint
   const response = await fetch(
@@ -131,4 +162,11 @@ async function isTempMail(email) {
   return disposable === "true";
 }
 
-module.exports = { enter, authenticate, codes, createAccount };
+module.exports = {
+  enter,
+  authenticate,
+  codes,
+  createAccount,
+  changePassword,
+  deleteAccount,
+};

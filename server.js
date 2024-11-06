@@ -27,7 +27,7 @@ wss.on("connection", async (ws) => {
               op: "auth_res",
               code: 400,
               message:
-                "Authentication failed: email and access token are required. Try relogin at https://adonis-ai.com/enter",
+                "Authentication failed: email and auth token are required. Try relogin at https://adonis-ai.com/enter",
             }),
           );
           break;
@@ -44,17 +44,17 @@ wss.on("connection", async (ws) => {
                 op: "auth_res",
                 code: 401,
                 message:
-                  "Access token has expired. Relogin or signup at https://adonis-ai.com/enter",
+                  "Auth token has expired. Relogin or signup at https://adonis-ai.com/enter",
               }),
             );
           } else if (!ws.authenticated) {
-            // incorrect access token or email
+            // incorrect auth token or email
             ws.send(
               JSON.stringify({
                 op: "auth_res",
                 code: 403,
                 message:
-                  "Authentication failed: email or access token invalid. Try relogin or signup at https://adonis-ai.com/enter",
+                  "Authentication failed: email or auth token invalid. Try relogin or signup at https://adonis-ai.com/enter",
               }),
             );
           } else {
@@ -136,8 +136,17 @@ app.post("/-/verify", async (req, res) => {
     res.json({ op: "incorrect-code" });
   }
 });
-
-app.post("/-/deleteAccount", (req, res) => {});
+app.post("/-/changePassword", async (req, res) => {
+  let response = await account_manager.changePassword(
+    req.email,
+    req.auth_token,
+    req.new_password,
+  );
+  res.json({ response: response });
+});
+app.post("/-/deleteChat", (req, res) => {
+  app.post("/-/deleteAccount", (req, res) => {});
+});
 // Handle 404 for unrecognized routes
 app.use((req, res) => {
   res.status(404).sendFile(path.join(__dirname, "client/404", "404.html"));
