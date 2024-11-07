@@ -27,8 +27,8 @@ form.addEventListener("submit", function (event) {
   const email = document.getElementById("emailInput").value;
   const password = passwordInput.value;
 
-  // Validate password length (6-25 characters)
-  if (password.length >= 6 && password.length <= 25) {
+  // Validate password length (6-64 characters)
+  if (password.length >= 6 && password.length <= 64) {
     // Save password and email for short period in sessionStorage and clear there after.
     // Also, using sessionStorage to avoid dealing with scopes.
     sessionStorage.setItem("email", email);
@@ -78,7 +78,7 @@ form.addEventListener("submit", function (event) {
       .catch((error) => console.error("Error:", error));
   } else {
     enterButton.disabled = false;
-    alert("Password must be between 6 and 25 characters long.");
+    alert("Password must be between 6 and 64 characters long.");
   }
 });
 

@@ -138,15 +138,14 @@ app.post("/-/verify", async (req, res) => {
 });
 app.post("/-/changePassword", async (req, res) => {
   let response = await account_manager.changePassword(
-    req.email,
-    req.auth_token,
-    req.new_password,
+    req.body.email,
+    req.body.auth_token,
+    req.body.new_password,
   );
   res.json({ response: response });
 });
-app.post("/-/deleteChat", (req, res) => {
-  app.post("/-/deleteAccount", (req, res) => {});
-});
+app.post("/-/clearChat", (req, res) => {});
+app.post("/-/deleteAccount", (req, res) => {});
 // Handle 404 for unrecognized routes
 app.use((req, res) => {
   res.status(404).sendFile(path.join(__dirname, "client/404", "404.html"));

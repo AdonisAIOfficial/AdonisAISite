@@ -130,15 +130,16 @@ async function changePassword(email, auth_token, new_password) {
     const AUTH_TOKEN_FROM_DB = response.rows[0].auth_token;
     console.log(AUTH_TOKEN_FROM_DB);
     const authenticated = bcrypt.compareSync(auth_token, AUTH_TOKEN_FROM_DB);
-    if (true) {
-      // if (authenticated) {
+    if (authenticated) {
       response = await db_manager.exec(
         "UPDATE users SET password = $1 WHERE email = $2",
         [hash(new_password), email],
       );
       return { code: 200 };
     } else return { code: 401 };
-  } catch (error) {}
+  } catch (error) {
+    console.error(error);
+  }
 }
 async function deleteAccount(email, auth_token) {
   // PROCESS:
