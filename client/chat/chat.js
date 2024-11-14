@@ -19,7 +19,7 @@ let pendingChunks = 0;
 ws.onopen = function () {
   // If user doesn't have email or auth token, don't even bother wasting the servers resources checking. Just send to /enter page.
   if (!localStorage.getItem("email") || !localStorage.getItem("auth_token"))
-    window.location.href = window.location.origin + "/enter";
+    window.location.replace(window.location.origin + "/enter");
   // Authenticate upon connection open.
   ws.send(
     JSON.stringify({
@@ -106,9 +106,12 @@ threedotsButton.addEventListener("click", function () {
 });
 
 submitFeedbackButton.addEventListener("click", function () {
-  window.parent.postMessage(
-    { operation: "feedback", feedback: feedbackTextarea.value },
-    "*",
+  ws.send(
+    JSON.stringify({
+      op: "feedback",
+      email: localStorage.getItem("email"),
+      feedback: feedbackTextarea.value,
+    }),
   );
   feedbackTextarea.value = "";
   submitFeedbackButton.innerHTML = "Thank you!";

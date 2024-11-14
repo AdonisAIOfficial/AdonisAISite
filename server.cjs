@@ -2,12 +2,12 @@ const WebSocket = require("ws");
 const express = require("express");
 const http = require("http");
 const path = require("path");
-const adonis = require("./server/adonis.js");
 const { v4: uuidv4 } = require("uuid");
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 const account_manager = require("./server/account-manager.js");
+const db_manager = require("./server/db-manager.js");
 const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "./client")));
@@ -69,6 +69,12 @@ wss.on("connection", async (ws) => {
           }
           break;
         }
+      case "feedback":
+        db_manager.exec(
+          "INSERT INTO feedback (feedback, email) VALUES ($1, $2)",
+          [json.feedback, json.email],
+        );
+        break;
     }
   });
   ws.on("close", () => {});
