@@ -75,14 +75,22 @@ wss.on("connection", async (ws) => {
       switch (json.op) {
         case "send_message":
           const stream_id = uuidv4();
-          ws.send("start_message"); // Start message.
+          ws.send(
+            JSON.stringify({ op: "start_message", message_id: stream_id }),
+          ); // Start message.
           chat_manager.emitter.on(stream_id, (chunk) => {
             // Set emitter listener.
-            console.log(chunk);
-            ws.send(JSON.stringify({ op: "chunk", chunk: chunk.chunk })); // Send chunk.
+            ws.send(
+              JSON.stringify({
+                op: "chunk",
+                chunk: chunk.chunk,
+                message_id: stream_id,
+              }),
+            ); // Send chunk.
             if (chunk.end == true) {
+              ws.send(JSON.stringify({ op: "end_message" })); // End message.
               chat_manager.emitter.removeListener(stream_id, () => {
-                ws.send("end_message"); // End message.
+                // TODO: Add message to PostgreSQL and users local copy
               }); // Remove emitter listening.
             }
           });

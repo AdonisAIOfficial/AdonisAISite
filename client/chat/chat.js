@@ -52,44 +52,20 @@ ws.onmessage = async (event) => {
         window.location.href = `${window.location.origin}/enter`;
       }
       break;
+    case "start_message":
+      let adonis_message = document.createElement("div");
+      adonis_message.id = json.message_id;
+      messages.appendChild(adonis_message);
+      break;
+    case "chunk":
+      if (json.chunk != null)
+        document.getElementById(json.message_id).textContent += json.chunk;
+      break;
+    case "end_message":
+      sendForcedDisabled = false;
+      updateSendButtonState();
+      break;
   }
-  if (json.op == "end") {
-    // Ensure all chunks are processed before setting lastMessageDiv to null
-    const checkChunksDone = setInterval(() => {
-      if (pendingChunks === 0) {
-        lastMessageDiv = null;
-        sendForcedDisabled = false;
-        updateSendButtonState();
-        adjustLayout();
-        clearInterval(checkChunksDone);
-      }
-    }, 100);
-  } else if (json.op == "ch") {
-    addChunk(json.ch);
-    adjustLayout();
-  }
-  /**
-    if (event.data.operation === "load") {
-    addMessage(event.data.sender, event.data.message);
-    adjustLayout();
-  } else if (event.data.operation === "stream") {
-    addChunk(event.data.chunk);
-    adjustLayout();
-  } else if (event.data.operation === "end") {
-    // Ensure all chunks are processed before setting lastMessageDiv to null
-    const checkChunksDone = setInterval(() => {
-      if (pendingChunks === 0) {
-        lastMessageDiv = null;
-        sendForcedDisabled = false;
-        updateSendButtonState();
-        adjustLayout();
-        clearInterval(checkChunksDone);
-      }
-    }, 100);
-  } else if (event.data.operation === "clearChat") {
-    clearChat();
-  }
-   */
 };
 threedotsButton.addEventListener("click", function () {
   if (mobileMenuOpen) {
@@ -215,20 +191,10 @@ function sendMessage() {
     );
   }
 }
-function formatText(text) {
-  return text
-    .replace(/\*\*\*(.*?)\*\*\*/g, "<strong><em>$1</em></strong>") // ***text***
-    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>") // **text**
-    .replace(/\*(.*?)\*/g, "<em>$1</em>") // *text*
-    .replace(/\*/g, ""); // Remove any remaining asterisks
-}
+
 function addMessage(sender, text) {
   const messageDiv = document.createElement("div");
   messageDiv.className = `message ${sender}`;
-
-  // Apply formatting rules
-  text = formatText(text); // Remove any remaining asterisks
-
   messageDiv.innerHTML = text;
   messages.appendChild(messageDiv);
   messages.scrollTop = messages.scrollHeight;
@@ -245,47 +211,6 @@ function adjustLayout() {
     textarea.style.overflowY = "hidden";
   }
   textarea.style.height = `${newHeight}px`;
-}
-
-let lastMessageDiv = null;
-function addChunk(chunk) {
-  if (!lastMessageDiv) {
-    lastMessageDiv = document.createElement("div");
-    lastMessageDiv.className = "message assistant";
-    messages.appendChild(lastMessageDiv);
-  }
-
-  const chunkElement = document.createElement("span");
-  chunkElement.className = "chunk";
-  chunkElement.innerHTML = chunk.replace(/ /g, "&nbsp;"); // replace spaces with non breaking spaces
-
-  chunkElement.classList.add("reveal");
-  lastMessageDiv.appendChild(chunkElement);
-
-  // Increment pendingChunks counter
-  pendingChunks++;
-  messages.scrollTop = messages.scrollHeight;
-
-  chunkElement.addEventListener("animationend", () => {
-    if (chunkElement.classList.contains("reveal")) {
-      const consolidatedSpan = document.createElement("span");
-      consolidatedSpan.className = "consolidated-text";
-      consolidatedSpan.innerHTML = chunkElement.innerHTML.replace(
-        /&nbsp;/g,
-        " ",
-      );
-      consolidatedSpan.innerHTML = formatText(consolidatedSpan.innerHTML);
-      lastMessageDiv.replaceChild(consolidatedSpan, chunkElement);
-
-      // Decrement pendingChunks counter and check if all chunks are resolved
-      pendingChunks--;
-      if (pendingChunks === 0 && lastMessageDiv.childElementCount === 0) {
-        lastMessageDiv = null;
-      }
-
-      messages.scrollTop = messages.scrollHeight;
-    }
-  });
 }
 
 function refreshChat(messagesArray) {
