@@ -1,0 +1,168 @@
+// Will remove soon, keeping this code here so I can convert later.
+
+import { ok, notFound, serverError, forbidden } from "wix-http-functions";
+import { fetch } from "wix-fetch";
+import * as Secrets from "backend/secrets.js";
+/*@ts-ignore*/
+import * as Stripe from "backend/Stripe.jsw";
+/*@ts-ignore*/
+import * as FireBase from "backend/FireBase.jsw";
+export async function post_handleSubscriptionPayment(req) {
+  async function handlePayment() {
+    const stripeSignature = req.headers["stripe-signature"];
+    if (!stripeSignature) return forbidden();
+    const isValid = Stripe.verifyStripeSignature(
+      req.body,
+      stripeSignature,
+      Secrets.STRIPE_SUBSCRIPTION_PAYMENT_WEBHOOK_SIGNING_SECRET,
+    );
+    if (!isValid) return forbidden();
+
+    let body = JSON.parse(await req.body.text());
+    const paid = parseFloat(body.data.object.amount_paid) / 100; // (USD)|cents=>dollar
+    const email = body.data.object.customer_email;
+    const wixUserId = await getWixUserIdByEmail(email);
+    if (!wixUserId) return serverError();
+
+    const newStats = await FireBase.addStats(wixUserId, {
+      paid: paid,
+    });
+    return ok({
+      body: {
+        wixUserId: wixUserId,
+        newStats: newStats,
+        paid: paid,
+        email: email,
+      },
+    });
+  }
+
+  try {
+    return await retry(handlePayment);
+  } catch (error) {
+    console.error("Failed to handle subscription payment:", error);
+    return serverError();
+  }
+}
+export async function post_handleSubscriptionCreation(req) {
+  async function handleCreation() {
+    const stripeSignature = req.headers["stripe-signature"];
+    if (!stripeSignature) return forbidden();
+
+    const isValid = Stripe.verifyStripeSignature(
+      req.body,
+      stripeSignature,
+      Secrets.STRIPE_SUBSCRIPTION_CREATION_WEBHOOK_SIGNING_SECRET,
+    );
+    if (!isValid) return forbidden();
+
+    const body = JSON.parse(await req.body.text());
+    const customerId = body.data.object.customer;
+    const customer = await Stripe.getCustomerById(customerId);
+    const email = customer.email;
+    const wixUserId = await getWixUserIdByEmail(email);
+
+    const newStats = await FireBase.addStats(wixUserId, {
+      paying: true,
+    });
+    return ok({
+      body: { customer: customer, wixUserId: wixUserId, newStats: newStats },
+    });
+  }
+
+  try {
+    return await retry(handleCreation);
+  } catch (error) {
+    console.error("Failed to handle subscription creation:", error);
+    return serverError();
+  }
+}
+
+export async function post_handleSubscriptionCancellation(req) {
+  async function handleCancellation() {
+    const stripeSignature = req.headers["stripe-signature"];
+    if (!stripeSignature) return forbidden();
+
+    const isValid = Stripe.verifyStripeSignature(
+      req.body,
+      stripeSignature,
+      Secrets.STRIPE_SUBSCRIPTION_CREATION_WEBHOOK_SIGNING_SECRET,
+    );
+    if (!isValid) return forbidden();
+
+    const body = JSON.parse(await req.body.text());
+    const customerId = body.data.object.customer;
+    const customer = await Stripe.getCustomerById(customerId);
+    const email = customer.email;
+    const wixUserId = await getWixUserIdByEmail(email);
+
+    const newStats = await FireBase.addStats(wixUserId, {
+      paying: false,
+    });
+    return ok({
+      body: { customer: customer, wixUserId: wixUserId, newStats: newStats },
+    });
+  }
+
+  try {
+    return await retry(handleCancellation);
+  } catch (error) {
+    console.error("Failed to handle subscription creation:", error);
+    return serverError();
+  }
+}
+//
+//
+//
+export async function getWixUserIdByEmail(email) {
+  const url = "https://www.wixapis.com/members/v1/members/query";
+
+  const options = {
+    method: "POST",
+    headers: {
+      Authorization: Secrets.WIX_SECRET_KEY,
+      "wix-site-id": Secrets.WIX_SITE_ID,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      query: {
+        filter: {
+          loginEmail: email,
+        },
+      },
+    }),
+  };
+
+  try {
+    const response = await fetch(url, options);
+    if (!response.ok) {
+      return null;
+    }
+    const data = await response.json();
+    return data.members[0].id;
+  } catch (error) {
+    return null;
+  }
+}
+export async function get_secrets(req) {
+  if (req.path[0] == Secrets.SECRETS_GET_KEY)
+    return ok({ body: { secrets: Secrets } });
+  else return forbidden();
+}
+//
+//
+//
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function retry(fn, retries = 5, delay = 100) {
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (attempt === retries - 1) throw error;
+      await sleep(delay);
+    }
+  }
+}

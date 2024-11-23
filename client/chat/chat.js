@@ -23,7 +23,7 @@ ws.onopen = function () {
   // Authenticate upon connection open.
   ws.send(
     JSON.stringify({
-      op: "auth",
+      op: "authenticate",
       email: localStorage.getItem("email"),
       token: localStorage.getItem("auth_token"),
     }),
@@ -197,15 +197,22 @@ toggleButton.addEventListener("click", function () {
 });
 
 function sendMessage() {
-  const messageText = textarea.value.trim();
-  if (messageText !== "") {
-    addMessage("user", messageText);
+  const message_text = textarea.value.trim();
+  if (message_text !== "") {
+    addMessage("user", message_text);
     textarea.value = "";
     sendButton.disabled = true;
     sendForcedDisabled = true;
     updateSendButtonState();
     adjustLayout();
-    ws.send(JSON.stringify({ op: "msg", msg: messageText }));
+    ws.send(
+      JSON.stringify({
+        op: "send_message",
+        email: localStorage.getItem("email"),
+        chat: localStorage.getItem("chat"),
+        message: message_text,
+      }),
+    );
   }
 }
 function formatText(text) {

@@ -15,7 +15,7 @@ ws.onopen = function () {
   // Authenticate upon connection open.
   ws.send(
     JSON.stringify({
-      op: "auth",
+      op: "authenticate",
       email: localStorage.getItem("email"),
       token: localStorage.getItem("auth_token"),
     }),

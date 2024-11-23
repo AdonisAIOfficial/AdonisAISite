@@ -8,6 +8,7 @@ const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 const account_manager = require("./server/account-manager.js");
 const db_manager = require("./server/db-manager.js");
+const chat_manager = require("./server/chat-manager.js");
 const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "./client")));
@@ -17,64 +18,83 @@ wss.on("connection", async (ws) => {
   ws.authenticated = false;
   ws.on("message", async (message) => {
     const json = JSON.parse(message);
-    switch (json.op) {
-      case "auth":
-        // client must provide email and login token
-        if (!json.email || !json.token) {
-          // incorrect authentication
+    if (json.op == "authenticate") {
+      // client must provide email and login token
+      if (!json.email || !json.token) {
+        // incorrect authentication
+        ws.send(
+          JSON.stringify({
+            op: "auth_res",
+            code: 400,
+            message:
+              "Authentication failed: email and auth token are required. Try relogin at https://adonis-ai.com/enter",
+          }),
+        );
+        return;
+      } else {
+        const result = await account_manager.authenticate(
+          json.email,
+          json.token,
+        );
+        ws.authenticated = result.auth;
+        if (!ws.authenticated && result.expired == true) {
+          // If token is valid but expired
           ws.send(
             JSON.stringify({
               op: "auth_res",
-              code: 400,
+              code: 401,
               message:
-                "Authentication failed: email and auth token are required. Try relogin at https://adonis-ai.com/enter",
+                "Auth token has expired. Relogin or signup at https://adonis-ai.com/enter",
             }),
           );
-          break;
-        } else {
-          const result = await account_manager.authenticate(
-            json.email,
-            json.token,
+        } else if (!ws.authenticated) {
+          // incorrect auth token or email
+          ws.send(
+            JSON.stringify({
+              op: "auth_res",
+              code: 403,
+              message:
+                "Authentication failed: email or auth token invalid. Try relogin or signup at https://adonis-ai.com/enter",
+            }),
           );
-          ws.authenticated = result.auth;
-          if (!ws.authenticated && result.expired == true) {
-            // If token is valid but expired
-            ws.send(
-              JSON.stringify({
-                op: "auth_res",
-                code: 401,
-                message:
-                  "Auth token has expired. Relogin or signup at https://adonis-ai.com/enter",
-              }),
-            );
-          } else if (!ws.authenticated) {
-            // incorrect auth token or email
-            ws.send(
-              JSON.stringify({
-                op: "auth_res",
-                code: 403,
-                message:
-                  "Authentication failed: email or auth token invalid. Try relogin or signup at https://adonis-ai.com/enter",
-              }),
-            );
-          } else {
-            ws.email = json.email;
-            ws.send(
-              JSON.stringify({
-                op: "auth_res",
-                code: 200,
-                message: "Authentication successful.",
-              }),
-            );
-          }
-          break;
+        } else {
+          ws.email = json.email;
+          ws.send(
+            JSON.stringify({
+              op: "auth_res",
+              code: 200,
+              message: "Authentication successful.",
+            }),
+          );
         }
-      case "feedback":
-        db_manager.exec(
-          "INSERT INTO feedback (feedback, email) VALUES ($1, $2)",
-          [json.feedback, json.email],
-        );
-        break;
+        return;
+      }
+    }
+    if (ws.authenticated == true) {
+      // Only if websocket connection is authenticated.
+      switch (json.op) {
+        case "send_message":
+          const stream_id = uuidv4();
+          ws.send("start_message"); // Start message.
+          chat_manager.emitter.on(stream_id, (chunk) => {
+            // Set emitter listener.
+            console.log(chunk);
+            ws.send(JSON.stringify({ op: "chunk", chunk: chunk.chunk })); // Send chunk.
+            if (chunk.end == true) {
+              chat_manager.emitter.removeListener(stream_id, () => {
+                ws.send("end_message"); // End message.
+              }); // Remove emitter listening.
+            }
+          });
+          chat_manager.getResponse(json.email, stream_id, [], json.message);
+          break;
+        case "feedback":
+          db_manager.exec(
+            "INSERT INTO feedback (feedback, email) VALUES ($1, $2)",
+            [json.feedback, json.email],
+          );
+          break;
+      }
     }
   });
   ws.on("close", () => {});
