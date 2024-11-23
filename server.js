@@ -78,7 +78,7 @@ wss.on("connection", async (ws) => {
           ws.send(
             JSON.stringify({ op: "start_message", message_id: stream_id }),
           ); // Start message.
-          chat_manager.emitter.on(stream_id, (chunk) => {
+          const listener = (chunk) => {
             // Set emitter listener.
             ws.send(
               JSON.stringify({
@@ -88,12 +88,22 @@ wss.on("connection", async (ws) => {
               }),
             ); // Send chunk.
             if (chunk.end == true) {
-              ws.send(JSON.stringify({ op: "end_message" })); // End message.
-              chat_manager.emitter.removeListener(stream_id, () => {
-                // TODO: Add message to PostgreSQL and users local copy
-              }); // Remove emitter listening.
+              const timestamp =
+                new Date().toISOString().slice(0, 19) +
+                "." +
+                new Date()
+                  .getMilliseconds()
+                  .toString()
+                  .padStart(3, "0")
+                  .slice(0, 1);
+              ws.send(
+                JSON.stringify({ op: "end_message", timestamp: timestamp }),
+                db_manager.exec("", []),
+              ); // End message.
+              chat_manager.emitter.removeListener(stream_id, listener); // Remove emitter listening.
             }
-          });
+          };
+          chat_manager.emitter.on(stream_id, listener);
           chat_manager.getResponse(json.email, stream_id, [], json.message);
           break;
         case "feedback":

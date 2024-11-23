@@ -65,6 +65,7 @@ ws.onmessage = async (event) => {
     case "end_message":
       sendForcedDisabled = false;
       updateSendButtonState();
+      // Add assistant message to local copy of chat
       break;
   }
 };

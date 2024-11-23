@@ -9,9 +9,10 @@ chat_updated_at TIMESTAMP(1) DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE messages (
-    email VARCHAR(255) REFERENCES users(email) NOT NULL,
+    email VARCHAR(255) NOT NULL REFERENCES users(email),
+    from_user BOOL NOT NULL DEFAULT FALSE,
     message TEXT NOT NULL,
-    timestamp TIMESTAMP(1) DEFAULT CURRENT_TIMESTAMP NOT NULL
+    timestamp TIMESTAMP(1) NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create a composite index on email and timestamp
