@@ -30,9 +30,8 @@ ws.onopen = function () {
   );
 };
 ws.onmessage = async (event) => {
-  // const message = await event.data.text();
   const message = event.data;
-  console.log("Message from server: ", message);
+  // console.log("Message from server: ", message);
   const json = JSON.parse(message);
   switch (json.op) {
     case "auth_res":
@@ -54,8 +53,10 @@ ws.onmessage = async (event) => {
       break;
     case "start_message":
       let adonis_message = document.createElement("div");
+      adonis_message.className = "message assistant";
       adonis_message.id = json.message_id;
       messages.appendChild(adonis_message);
+      messages.scrollTop = messages.scrollHeight;
       break;
     case "chunk":
       if (json.chunk != null)
