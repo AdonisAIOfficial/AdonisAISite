@@ -69,9 +69,11 @@ cancelButton.addEventListener("click", () => {
 confirmButton.addEventListener("click", () => {
   confirmBox.style.display = "none";
   overlay.style.display = "none";
-  window.parent.postMessage("!{deleteChat}!", "*");
+  ws.send(JSON.stringify({ op: "delete_chat" }));
+  localStorage.removeItem("chat");
   if (document.getElementById("toggleMemory").checked) {
-    window.parent.postMessage("!{clearMemory}!", "*");
+    ws.send(JSON.stringify({ op: "clear_memory" }));
+    localStorage.removeItem("memory");
   }
 });
 

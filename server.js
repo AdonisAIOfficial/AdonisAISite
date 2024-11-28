@@ -78,8 +78,10 @@ wss.on("connection", async (ws) => {
           ws.send(
             JSON.stringify({ op: "start_message", message_id: stream_id }),
           ); // Start message.
+          let response = "";
           const listener = (chunk) => {
             // Set emitter listener.
+            response += chunk.chunk != null ? chunk.chunk : ""; // Make sure we aren't appending undefined or null chunks.
             ws.send(
               JSON.stringify({
                 op: "chunk",
@@ -97,20 +99,43 @@ wss.on("connection", async (ws) => {
                   .padStart(3, "0")
                   .slice(0, 1);
               ws.send(
-                JSON.stringify({ op: "end_message", timestamp: timestamp }),
-                db_manager.exec("", []),
+                JSON.stringify({
+                  op: "end_message",
+                  response: response,
+                  timestamp: timestamp,
+                }),
               ); // End message.
+              db_manager.exec(
+                "INSERT INTO messages (email, message, timestamp, from_user) VALUES ($1, $2, $3, $4)",
+                [ws.email, response, timestamp, false],
+              );
               chat_manager.emitter.removeListener(stream_id, listener); // Remove emitter listening.
             }
           };
           chat_manager.emitter.on(stream_id, listener);
-          chat_manager.getResponse(json.email, stream_id, [], json.message);
+          chat_manager.getResponse(stream_id, json.chat);
+
+          db_manager.exec(
+            "INSERT INTO messages (email, message, timestamp, from_user) VALUES ($1, $2, $3, $4)",
+            [
+              ws.email,
+              json.chat.message[json.chat.message.length - 1], // Get the last message.
+              json.chat.timestamp[json.chat.timestamp.length - 1], // Insert the exact timestamp when message was sent.
+              true, // The message is from the user.
+            ],
+          );
           break;
         case "feedback":
           db_manager.exec(
             "INSERT INTO feedback (feedback, email) VALUES ($1, $2)",
             [json.feedback, json.email],
           );
+          break;
+        case "delete_chat":
+          chat_manager.deleteChat(ws.email);
+          break;
+        case "clear_memory":
+          chat_manager.clearMemory(ws.email);
           break;
       }
     }
