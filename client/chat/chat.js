@@ -75,6 +75,7 @@ ws.onmessage = async (event) => {
       chat.from_user.push(false);
       chat.timestamp.push(json.timestamp);
       localStorage.setItem("chat", JSON.stringify(chat));
+      localStorage.setItem("copy_updated_at", getNow());
       // Add assistant message to local copy of chat
       break;
     case "add_missing_data": {
@@ -94,6 +95,7 @@ ws.onmessage = async (event) => {
         chat.timestamp.push(message.timestamp);
         chat.from_user.push(message.from_user);
       });
+      localStorage.setItem("chat", JSON.stringify(chat));
       loadChat();
       console.log("Chat synced.");
     }
