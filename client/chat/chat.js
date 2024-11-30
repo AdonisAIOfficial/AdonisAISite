@@ -31,9 +31,6 @@ ws.onopen = function () {
       token: localStorage.getItem("auth_token"),
     }),
   );
-  // Next step, retrieve missing messages.
-  // TODO: Implement here
-  loadChat();
 };
 ws.onmessage = async (event) => {
   const message = event.data;
@@ -43,6 +40,13 @@ ws.onmessage = async (event) => {
     case "auth_res":
       if (json.code == 200) {
         console.log("Authenticated successfully.");
+        // Next step, retrieve missing messages.
+        ws.send(
+          JSON.stringify({
+            op: "get_missing_data",
+            copy_updated_at: localStorage.getItem("copy_updated_at"), // gets the last time the local copy was synced
+          }),
+        );
       } else if (json.code == 401) {
         // Auth token expired.
         console.log(
@@ -76,7 +80,12 @@ ws.onmessage = async (event) => {
       chat.timestamp.push(json.timestamp);
       localStorage.setItem("chat", JSON.stringify(chat));
       // Add assistant message to local copy of chat
-      chat.break;
+      break;
+    case "add_missing_data": {
+      console.log("||Adding missing data||");
+      console.log(json);
+      loadChat();
+    }
   }
 };
 threedotsButton.addEventListener("click", function () {

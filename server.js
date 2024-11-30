@@ -125,6 +125,17 @@ wss.on("connection", async (ws) => {
             ],
           );
           break;
+        case "get_missing_data":
+          ws.send(
+            JSON.stringify({
+              op: "add_missing_data",
+              data: await chat_manager.getMissingData(
+                ws.email,
+                json.copy_updated_at,
+              ),
+            }),
+          );
+          break;
         case "feedback":
           db_manager.exec(
             "INSERT INTO feedback (feedback, email) VALUES ($1, $2)",
@@ -135,7 +146,7 @@ wss.on("connection", async (ws) => {
           chat_manager.deleteChat(ws.email);
           break;
         case "clear_memory":
-          chat_manager.clearMemory(ws.email);
+          chat_manager.deleteMemory(ws.email);
           break;
       }
     }

@@ -41,8 +41,21 @@ async function getResponse(stream_id, full_chat) {
     }
   }
 }
-async function getChat(email, chat_copy_updated_at) {
-  //
+async function getMissingData(email, copy_updated_at) {
+  console.log(email, copy_updated_at);
+  if (copy_updated_at == null) {
+    copy_updated_at = "2000-01-01T00:00:00.0"; // Will essentially retrieve all data ( since no data has been inserted from earlier than the 2000)
+  }
+  const messages = await db_manager.exec(
+    "SELECT * FROM messages WHERE email = $1 AND timestamp > $2 ORDER BY timestamp ASC",
+    [email, copy_updated_at],
+  );
+  const memories = await db_manager.exec(
+    "SELECT * FROM memories WHERE email = $1 AND timestamp > $2 ORDER BY timestamp ASC",
+    [email, copy_updated_at],
+  );
+  console.log(messages);
+  return { messages: messages.rows, memories: memories.rows };
 }
 async function deleteChat(email) {
   db_manager.exec("DELETE FROM messages WHERE email = $1", [email]);
@@ -64,5 +77,14 @@ function sliceChat(chat, N) {
   // Return the result without the timestamp
   return result.map(({ timestamp, ...rest }) => rest);
 }
-function clearMemory(email) {}
-module.exports = { emitter, getResponse, getChat, deleteChat, clearMemory };
+function deleteMemory(email) {
+  db_manager.exec("DELETE FROM memories WHERE email = $1", [email]);
+}
+
+module.exports = {
+  emitter,
+  getResponse,
+  getMissingData,
+  deleteChat,
+  deleteMemory,
+};
