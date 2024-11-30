@@ -71,10 +71,11 @@ confirmButton.addEventListener("click", () => {
   overlay.style.display = "none";
   ws.send(JSON.stringify({ op: "delete_chat" }));
   localStorage.removeItem("chat");
-  if (document.getElementById("toggleMemory").checked) {
-    ws.send(JSON.stringify({ op: "clear_memory" }));
-    localStorage.removeItem("memory");
-  }
+  ws.send(JSON.stringify({ op: "clear_memory" }));
+  localStorage.removeItem("memory");
+  localStorage.removeItem("copy_updated_at");
+  // TODO: Remove toggleMemory checkbox
+  // TODO: Merge delete_chat and clear_memory into one function
 });
 
 sidebarButtons.forEach((button) => {

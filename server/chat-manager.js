@@ -54,7 +54,6 @@ async function getMissingData(email, copy_updated_at) {
     "SELECT * FROM memories WHERE email = $1 AND timestamp > $2 ORDER BY timestamp ASC",
     [email, copy_updated_at],
   );
-  console.log(messages);
   return { messages: messages.rows, memories: memories.rows };
 }
 async function deleteChat(email) {

@@ -14,11 +14,7 @@ const submitFeedbackButton = document.querySelector(".submit-feedback-button");
 const threedotsButton = document.querySelector(".three-dots-button");
 let mobileMenuOpen = false;
 let feedbackBoxOpen = false;
-let chat = {
-  message: [],
-  timestamp: [],
-  from_user: [],
-};
+let chat;
 ws.onopen = function () {
   // If user doesn't have email or auth token, don't even bother wasting the servers resources checking. Just send to /enter page.
   if (!localStorage.getItem("email") || !localStorage.getItem("auth_token"))
@@ -82,9 +78,24 @@ ws.onmessage = async (event) => {
       // Add assistant message to local copy of chat
       break;
     case "add_missing_data": {
-      console.log("||Adding missing data||");
       console.log(json);
+      localStorage.setItem("copy_updated_at", getNow());
+      chat = JSON.parse(localStorage.getItem("chat"));
+      if (chat == null) {
+        chat = {
+          message: [],
+          timestamp: [],
+          from_user: [],
+        };
+      }
+      json.data.messages.forEach((message) => {
+        console.log(message);
+        chat.message.push(message.message);
+        chat.timestamp.push(message.timestamp);
+        chat.from_user.push(message.from_user);
+      });
       loadChat();
+      console.log("Chat synced.");
     }
   }
 };
@@ -202,13 +213,11 @@ function sendMessage() {
     sendForcedDisabled = true;
     updateSendButtonState();
     adjustLayout();
-    const timestamp =
-      new Date().toISOString().slice(0, 19) +
-      "." +
-      new Date().getMilliseconds().toString().padStart(3, "0").slice(0, 1);
+    const timestamp = getNow();
     chat.message.push(message_text);
     chat.from_user.push(true);
     chat.timestamp.push(timestamp);
+    localStorage.setItem("copy_updated_at", timestamp);
     ws.send(
       JSON.stringify({
         op: "send_message",
@@ -266,32 +275,17 @@ function clearChat() {
   }
 }
 function loadChat() {
-  const localChat = localStorage.getItem("chat");
-
-  if (localChat) {
-    try {
-      const parsedChat = JSON.parse(localChat);
-      // Validate the parsed chat structure
-      if (
-        Array.isArray(parsedChat.message) &&
-        Array.isArray(parsedChat.timestamp) &&
-        Array.isArray(parsedChat.from_user)
-      ) {
-        chat = parsedChat;
-        refreshChat(
-          chat.message.map((message, index) => ({
-            sender: chat.from_user[index] ? "user" : "assistant",
-            text: message,
-          })),
-        );
-        return;
-      }
-    } catch (error) {
-      console.error("Error parsing local chat data:", error);
-    }
-  }
-
-  // Clear invalid chat data from localStorage
-  console.warn("Invalid or missing chat data. Clearing local storage.");
-  localStorage.removeItem("chat");
+  refreshChat(
+    chat.message.map((message, index) => ({
+      sender: chat.from_user[index] ? "user" : "assistant",
+      text: message,
+    })),
+  );
+}
+function getNow() {
+  return (
+    new Date().toISOString().slice(0, 19) +
+    "." +
+    new Date().getMilliseconds().toString().padStart(3, "0").slice(0, 1)
+  );
 }
