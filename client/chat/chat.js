@@ -81,13 +81,17 @@ ws.onmessage = async (event) => {
     case "add_missing_data": {
       console.log(json);
       localStorage.setItem("copy_updated_at", getNow());
-      chat = JSON.parse(localStorage.getItem("chat"));
-      if (chat == null) {
-        chat = {
-          message: [],
-          timestamp: [],
-          from_user: [],
-        };
+      chat = {
+        message: [],
+        timestamp: [],
+        from_user: [],
+      };
+
+      try {
+        const storedChat = JSON.parse(localStorage.getItem("chat"));
+        if (storedChat) chat = storedChat;
+      } catch {
+        // If parsing fails, `chat` remains the default value
       }
       json.data.messages.forEach((message) => {
         console.log(message);
